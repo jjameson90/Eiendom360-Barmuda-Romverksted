@@ -1,0 +1,1771 @@
+<!doctype html>
+<html lang="nb">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="description" content="Interaktiv plantegning og 3D av Barmuda, Solsiden i Trondheim.">
+<style>:root{color-scheme:light}body{margin:0}img{max-width:100%}[hidden]{display:none!important}</style>
+<title>Barmuda Romverksted</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700&family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600&display=swap">
+<script type="importmap">{"imports":{"three":"https://cdn.jsdelivr.net/npm/three@0.169.0/build/three.module.js","three/addons/":"https://cdn.jsdelivr.net/npm/three@0.169.0/examples/jsm/"}}</script>
+<style>
+/* Layout: drafting-table app — tool rail + library left, plan sheet centre, inspector right; bottom sheets on phones */
+:root{
+  --bg:#EEECEF; --panel:#FFFFFF; --panel-2:#F6F4F6; --ink:#221E27; --ink-2:#645C69; --ink-3:#8E8693;
+  --line:#E1DCE2; --line-2:#CFC8D1;
+  --accent:#A83D66; --accent-ink:#FFFFFF; --accent-soft:#F6E6EC; --accent-line:#E3B7C8;
+  --paper:#FBFAF9; --grid:rgba(34,30,39,.055); --grid-major:rgba(34,30,39,.11);
+  --wall:#2A2530; --wall-new:#A83D66; --wall-demo:#C4473F; --wall-ghost:rgba(42,37,48,.18);
+  --floor:#F1ECE6; --floor-2:#ECE6EF; --level:#E6DACB; --level-2:#EDE3D6; --patio:#E4E9E2; --void:rgba(42,37,48,.10);
+  --f-bar:#C79B6B; --f-bar-top:#EFE4D6; --f-seat:#9A7390; --f-seat-2:#C9A9BE; --f-table:#E2DAD0; --f-stage:#7C8896;
+  --f-equip:#9FB0A6; --f-fix:#D6D1D8; --f-plant:#7FA07A; --f-zone:rgba(168,61,102,.09); --sel:#2F7BD8;
+  --ok:#2E7D5B; --warn:#B7791F;
+  --font-display:"Bricolage Grotesque", "Avenir Next", "Segoe UI", system-ui, sans-serif;
+  --font-ui:"IBM Plex Sans", "Segoe UI", system-ui, -apple-system, sans-serif;
+  --font-num:"IBM Plex Mono", ui-monospace, "SFMono-Regular", Menlo, Consolas, monospace;
+  --r:10px; --r-s:7px;
+  --shadow:0 1px 2px rgba(20,16,24,.06), 0 8px 24px rgba(20,16,24,.08);
+}
+@media (prefers-color-scheme: dark){ :root:not([data-theme="light"]){
+  --bg:#141217; --panel:#1C1920; --panel-2:#231F28; --ink:#EEE9F0; --ink-2:#ABA2AF; --ink-3:#7F7784;
+  --line:#2F2A35; --line-2:#3E3844;
+  --accent:#E586A9; --accent-ink:#1A1116; --accent-soft:#3A2230; --accent-line:#6B3A50;
+  --paper:#1A181E; --grid:rgba(238,233,240,.045); --grid-major:rgba(238,233,240,.09);
+  --wall:#E6E0EA; --wall-new:#E586A9; --wall-demo:#F07A70; --wall-ghost:rgba(230,224,234,.16);
+  --floor:#222027; --floor-2:#24212B; --level:#3A322B; --level-2:#332C27; --patio:#1F2621; --void:rgba(230,224,234,.07);
+  --f-bar:#B98A5B; --f-bar-top:#4A3F35; --f-seat:#9C7792; --f-seat-2:#5E4858; --f-table:#4B4550; --f-stage:#6D7987;
+  --f-equip:#5F7368; --f-fix:#3D3843; --f-plant:#5F8559; --f-zone:rgba(229,134,169,.10); --sel:#6AA8F2;
+  --ok:#5CC195; --warn:#E0A64A;
+  --shadow:0 1px 2px rgba(0,0,0,.3), 0 8px 24px rgba(0,0,0,.35); color-scheme:dark;
+}}
+:root[data-theme="dark"]{
+  --bg:#141217; --panel:#1C1920; --panel-2:#231F28; --ink:#EEE9F0; --ink-2:#ABA2AF; --ink-3:#7F7784;
+  --line:#2F2A35; --line-2:#3E3844;
+  --accent:#E586A9; --accent-ink:#1A1116; --accent-soft:#3A2230; --accent-line:#6B3A50;
+  --paper:#1A181E; --grid:rgba(238,233,240,.045); --grid-major:rgba(238,233,240,.09);
+  --wall:#E6E0EA; --wall-new:#E586A9; --wall-demo:#F07A70; --wall-ghost:rgba(230,224,234,.16);
+  --floor:#222027; --floor-2:#24212B; --level:#3A322B; --level-2:#332C27; --patio:#1F2621; --void:rgba(230,224,234,.07);
+  --f-bar:#B98A5B; --f-bar-top:#4A3F35; --f-seat:#9C7792; --f-seat-2:#5E4858; --f-table:#4B4550; --f-stage:#6D7987;
+  --f-equip:#5F7368; --f-fix:#3D3843; --f-plant:#5F8559; --f-zone:rgba(229,134,169,.10); --sel:#6AA8F2;
+  --ok:#5CC195; --warn:#E0A64A;
+  --shadow:0 1px 2px rgba(0,0,0,.3), 0 8px 24px rgba(0,0,0,.35); color-scheme:dark;
+}
+*,*::before,*::after{box-sizing:border-box}
+html,body{height:100%}
+body{background:var(--bg);color:var(--ink);font:14px/1.45 var(--font-ui);overflow:hidden;-webkit-font-smoothing:antialiased}
+button,input,select,textarea{font:inherit;color:inherit}
+button{cursor:pointer}
+:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.num{font-family:var(--font-num);font-variant-numeric:tabular-nums}
+
+#app{height:100%;display:grid;grid-template-columns:272px minmax(0,1fr) 300px;grid-template-rows:56px minmax(0,1fr);grid-template-areas:"top top top" "left stage right"}
+.top{grid-area:top;display:flex;align-items:center;gap:12px;padding:0 14px;background:var(--panel);border-bottom:1px solid var(--line);min-width:0}
+.brand{display:flex;align-items:baseline;gap:8px;white-space:nowrap;min-width:0}
+.brand b{font:700 19px/1 var(--font-display);letter-spacing:-.01em}
+.brand span{font:500 11px/1 var(--font-ui);letter-spacing:.12em;text-transform:uppercase;color:var(--accent)}
+.brand .pname{font:400 13px var(--font-ui);letter-spacing:0;text-transform:none;color:var(--ink-2);overflow:hidden;text-overflow:ellipsis;max-width:220px}
+.spacer{flex:1}
+.seg{display:inline-flex;background:var(--panel-2);border:1px solid var(--line);border-radius:999px;padding:3px;gap:2px}
+.seg button{border:0;background:transparent;padding:6px 13px;border-radius:999px;font-weight:500;font-size:13px;color:var(--ink-2);white-space:nowrap}
+.seg button[aria-pressed="true"]{background:var(--panel);color:var(--ink);box-shadow:0 1px 2px rgba(0,0,0,.12)}
+.btn{display:inline-flex;align-items:center;gap:7px;border:1px solid var(--line);background:var(--panel);border-radius:var(--r-s);padding:7px 12px;font-weight:500;font-size:13px;white-space:nowrap}
+.btn:hover{border-color:var(--line-2);background:var(--panel-2)}
+.btn.primary{background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}
+.btn.primary:hover{filter:brightness(1.05)}
+.btn.ghost{border-color:transparent;background:transparent}
+.btn.danger{color:var(--wall-demo)}
+.btn:disabled{opacity:.45;cursor:default}
+.icon-btn{width:34px;height:34px;display:inline-grid;place-items:center;border:1px solid transparent;border-radius:var(--r-s);background:transparent;color:var(--ink-2)}
+.icon-btn:hover{background:var(--panel-2);color:var(--ink)}
+.icon-btn:disabled{opacity:.35}
+svg.i{width:18px;height:18px;fill:none;stroke:currentColor;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round}
+
+/* left */
+.left{grid-area:left;background:var(--panel);border-right:1px solid var(--line);display:flex;flex-direction:column;min-height:0}
+.tools{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;padding:12px 12px 10px;border-bottom:1px solid var(--line)}
+.tool{display:flex;flex-direction:column;align-items:center;gap:4px;border:1px solid var(--line);background:var(--panel);border-radius:var(--r-s);padding:8px 4px 6px;font-size:11.5px;font-weight:500;color:var(--ink-2)}
+.tool[aria-pressed="true"]{border-color:var(--accent);background:var(--accent-soft);color:var(--ink)}
+.tool kbd{font:500 10px var(--font-num);color:var(--ink-3)}
+.lib-head{padding:12px 12px 8px;display:flex;flex-direction:column;gap:8px}
+.lib-head h2,.pane h2{font:600 11px/1 var(--font-ui);letter-spacing:.1em;text-transform:uppercase;color:var(--ink-3);margin:0}
+.search{width:100%;border:1px solid var(--line);background:var(--panel-2);border-radius:var(--r-s);padding:7px 10px}
+.lib{overflow:auto;padding:0 12px 16px;min-height:0;flex:1}
+.lib h3{font:600 12.5px var(--font-ui);margin:14px 2px 8px;color:var(--ink)}
+.lib-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:6px}
+.lib-item{border:1px solid var(--line);background:var(--panel);border-radius:var(--r-s);padding:6px 4px 6px;display:flex;flex-direction:column;align-items:center;gap:3px;font-size:11px;line-height:1.2;text-align:center;color:var(--ink-2);touch-action:pan-y;user-select:none}
+#plan > g *,.lib-item svg *{vector-effect:non-scaling-stroke}
+.lib-item:hover{border-color:var(--accent-line);color:var(--ink)}
+.lib-item[aria-pressed="true"]{border-color:var(--accent);background:var(--accent-soft);color:var(--ink)}
+.lib-item svg{width:52px;height:40px}
+.lib-item small{font:400 10px var(--font-num);color:var(--ink-3)}
+
+/* stage */
+.stage{grid-area:stage;position:relative;min-width:0;min-height:0;background:var(--paper);overflow:hidden}
+#plan{position:absolute;inset:0;width:100%;height:100%;touch-action:none;user-select:none;display:block}
+#three{position:absolute;inset:0}
+#three canvas{display:block;width:100%;height:100%;touch-action:none}
+.hint{position:absolute;left:50%;top:12px;transform:translateX(-50%);background:var(--ink);color:var(--paper);padding:7px 14px;border-radius:999px;font-size:12.5px;box-shadow:var(--shadow);pointer-events:none;max-width:calc(100% - 32px);text-align:center}
+.zoom{position:absolute;right:12px;bottom:12px;display:flex;flex-direction:column;background:var(--panel);border:1px solid var(--line);border-radius:var(--r);box-shadow:var(--shadow);overflow:hidden}
+.zoom button{border:0;background:transparent;width:36px;height:34px;display:grid;place-items:center;color:var(--ink-2)}
+.zoom button+button{border-top:1px solid var(--line)}
+.zoom button:hover{background:var(--panel-2);color:var(--ink)}
+.scalebar{position:absolute;left:14px;bottom:14px;display:flex;flex-direction:column;gap:3px;font:500 11px var(--font-num);color:var(--ink-2);pointer-events:none}
+.scalebar i{display:block;height:6px;border:1.5px solid var(--ink-2);border-top:0}
+.compass{position:absolute;right:14px;top:12px;font:500 11px var(--font-num);color:var(--ink-3);pointer-events:none;text-align:right;line-height:1.35}
+.float-card{position:absolute;left:14px;top:12px;background:var(--panel);border:1px solid var(--line);border-radius:var(--r);box-shadow:var(--shadow);padding:8px 10px;display:flex;flex-direction:column;gap:6px;font-size:12.5px;max-width:260px}
+.float-card label{display:flex;align-items:center;gap:8px;cursor:pointer}
+.view3d-bar{position:absolute;left:50%;bottom:14px;transform:translateX(-50%);display:flex;gap:6px;flex-wrap:wrap;justify-content:center;max-width:calc(100% - 28px)}
+.chip{border:1px solid var(--line);background:var(--panel);border-radius:999px;padding:6px 12px;font-size:12.5px;font-weight:500;box-shadow:var(--shadow);white-space:nowrap}
+.chip[aria-pressed="true"]{background:var(--ink);color:var(--paper);border-color:var(--ink)}
+.loading3d{position:absolute;inset:0;display:grid;place-items:center;color:var(--ink-2);font-size:13px}
+
+/* right */
+.right{grid-area:right;background:var(--panel);border-left:1px solid var(--line);overflow:auto;min-height:0}
+.pane{padding:16px 16px 20px;display:flex;flex-direction:column;gap:14px}
+.pane h1{font:700 18px/1.15 var(--font-display);margin:0;text-wrap:balance}
+.pane .sub{color:var(--ink-2);font-size:12.5px;margin:-8px 0 0}
+.stats{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.stat{background:var(--panel-2);border:1px solid var(--line);border-radius:var(--r-s);padding:9px 10px}
+.stat b{display:block;font:500 20px/1.1 var(--font-num);font-variant-numeric:tabular-nums}
+.stat span{font-size:11.5px;color:var(--ink-2)}
+.row{display:flex;gap:8px;align-items:center}
+.row.wrap{flex-wrap:wrap}
+.field{display:flex;flex-direction:column;gap:4px;min-width:0;flex:1}
+.field>span{font-size:11.5px;color:var(--ink-2);font-weight:500}
+.field input,.field select,.field textarea{border:1px solid var(--line);background:var(--panel-2);border-radius:var(--r-s);padding:7px 9px;min-width:0;width:100%}
+.field textarea{min-height:64px;resize:vertical}
+.unit{position:relative}
+.unit input{padding-right:26px;font-family:var(--font-num)}
+.unit em{position:absolute;right:8px;top:50%;transform:translateY(-50%);font:normal 11px var(--font-num);color:var(--ink-3);pointer-events:none}
+.toggles{display:flex;flex-direction:column;gap:2px}
+.toggles label{display:flex;align-items:center;gap:9px;padding:5px 2px;cursor:pointer;font-size:13px}
+.toggles input{accent-color:var(--accent);width:16px;height:16px}
+.legend{display:grid;grid-template-columns:auto 1fr;gap:6px 10px;align-items:center;font-size:12.5px;color:var(--ink-2)}
+.sw{width:26px;height:8px;border-radius:2px}
+.note{font-size:12px;color:var(--ink-2);background:var(--panel-2);border:1px solid var(--line);border-radius:var(--r-s);padding:9px 10px}
+.note b{color:var(--ink);font-weight:600}
+.warn{font-size:12.5px;color:var(--ink);background:color-mix(in srgb,var(--warn) 14%,transparent);border:1px solid color-mix(in srgb,var(--warn) 40%,transparent);border-radius:var(--r-s);padding:8px 10px}
+.pill{display:inline-flex;align-items:center;gap:6px;font-size:11.5px;font-weight:600;border-radius:999px;padding:3px 9px;background:var(--panel-2);border:1px solid var(--line);color:var(--ink-2)}
+.pill.ex{color:var(--ink)}
+.pill.new{color:var(--accent);border-color:var(--accent-line);background:var(--accent-soft)}
+.pill.demo{color:var(--wall-demo);border-color:color-mix(in srgb,var(--wall-demo) 40%,transparent)}
+.rot-row{display:flex;gap:6px;align-items:center}
+.rot-row input[type=range]{flex:1;accent-color:var(--accent)}
+.swatches{display:flex;gap:6px;flex-wrap:wrap}
+.swatches button{width:24px;height:24px;border-radius:50%;border:2px solid var(--panel);box-shadow:0 0 0 1px var(--line-2)}
+.swatches button[aria-pressed="true"]{box-shadow:0 0 0 2px var(--accent)}
+.ops{display:flex;flex-direction:column;gap:6px}
+.op{display:grid;grid-template-columns:1fr 78px 78px 30px;gap:6px;align-items:end;background:var(--panel-2);border:1px solid var(--line);border-radius:var(--r-s);padding:7px}
+.op b{font-size:12px;align-self:center}
+.divider{height:1px;background:var(--line);margin:2px 0}
+.actions{display:flex;gap:8px;flex-wrap:wrap}
+
+/* dialogs */
+.scrim{position:fixed;inset:0;background:rgba(15,12,18,.38);display:grid;place-items:center;z-index:40;padding:16px}
+.dialog{background:var(--panel);border:1px solid var(--line);border-radius:14px;box-shadow:var(--shadow);width:min(720px,100%);max-height:min(86vh,760px);display:flex;flex-direction:column;min-height:0}
+.dialog header{display:flex;align-items:center;gap:10px;padding:16px 18px 12px;border-bottom:1px solid var(--line)}
+.dialog header h2{font:700 19px var(--font-display);margin:0;flex:1}
+.dialog .body{padding:16px 18px 18px;overflow:auto;display:flex;flex-direction:column;gap:16px;min-height:0}
+.dialog h3{font:600 13px var(--font-ui);margin:0}
+.starts{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:8px}
+.start{border:1px solid var(--line);border-radius:var(--r);background:var(--panel-2);padding:10px 12px;text-align:left;display:flex;flex-direction:column;gap:3px}
+.start:hover{border-color:var(--accent-line)}
+.start b{font-weight:600;font-size:13px}
+.start span{font-size:12px;color:var(--ink-2)}
+.plist{display:flex;flex-direction:column;gap:8px}
+.pcard{display:grid;grid-template-columns:96px minmax(0,1fr) auto;gap:12px;align-items:center;border:1px solid var(--line);border-radius:var(--r);padding:8px;background:var(--panel)}
+.pcard .thumb{width:96px;height:72px;border-radius:6px;background:var(--paper);border:1px solid var(--line);overflow:hidden}
+.pcard .thumb svg{width:100%;height:100%}
+.pcard b{display:block;font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.pcard span{font-size:12px;color:var(--ink-2)}
+.pcard .acts{display:flex;gap:6px;flex-wrap:wrap;justify-content:flex-end}
+.empty{border:1px dashed var(--line-2);border-radius:var(--r);padding:16px;color:var(--ink-2);font-size:13px;text-align:center}
+.help-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:12px}
+.help-grid div{background:var(--panel-2);border:1px solid var(--line);border-radius:var(--r);padding:12px}
+.help-grid b{display:block;margin-bottom:4px}
+.help-grid p{margin:0;font-size:12.5px;color:var(--ink-2)}
+kbd{font:500 11px var(--font-num);border:1px solid var(--line-2);border-bottom-width:2px;border-radius:4px;padding:0 5px;background:var(--panel)}
+.keys{display:grid;grid-template-columns:auto 1fr;gap:6px 12px;font-size:12.5px;align-items:center}
+.toast{position:fixed;left:50%;bottom:24px;transform:translateX(-50%);background:var(--ink);color:var(--paper);padding:9px 16px;border-radius:999px;font-size:13px;z-index:60;box-shadow:var(--shadow);max-width:calc(100% - 32px)}
+.menu{position:absolute;right:14px;top:52px;background:var(--panel);border:1px solid var(--line);border-radius:var(--r);box-shadow:var(--shadow);padding:6px;display:flex;flex-direction:column;z-index:30;min-width:230px}
+.menu button{border:0;background:transparent;text-align:left;padding:8px 10px;border-radius:6px;display:flex;flex-direction:column}
+.menu button:hover{background:var(--panel-2)}
+.menu button span{font-size:11.5px;color:var(--ink-2)}
+.coach{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);width:min(420px,calc(100% - 32px));background:var(--panel);border:1px solid var(--line);border-radius:14px;box-shadow:var(--shadow);padding:18px 18px 14px;z-index:20;display:flex;flex-direction:column;gap:10px}
+.coach h2{font:700 20px/1.15 var(--font-display);margin:0;text-wrap:balance}
+.coach ol{margin:0;padding-left:20px;display:flex;flex-direction:column;gap:6px;font-size:13.5px}
+.coach p{margin:0;color:var(--ink-2);font-size:12.5px}
+
+/* plan svg classes */
+.pl-paper{fill:var(--paper)}
+.pl-floor{fill:var(--floor)}
+.pl-floor2{fill:var(--floor-2)}
+.pl-patio{fill:var(--patio);stroke:var(--ink-3);stroke-dasharray:4 3}
+.pl-level{fill:var(--level);stroke:var(--ink-3)}
+.pl-void{fill:url(#hatch-void);stroke:none}
+.pl-edge{fill:none;stroke:var(--ink-2);stroke-dasharray:7 4}
+.pl-rail{fill:none;stroke:var(--wall)}
+.pl-wall{fill:var(--wall)}
+.pl-wall.new{fill:var(--wall-new)}
+.pl-wall.demo{fill:url(#hatch-demo);stroke:var(--wall-demo);stroke-dasharray:4 3}
+.pl-wall.ghost{fill:var(--wall-ghost)}
+.pl-door{fill:none;stroke:var(--ink-2)}
+.pl-win{fill:var(--paper);stroke:var(--wall)}
+.pl-label{fill:var(--ink-2);font-family:var(--font-ui);font-weight:500}
+.pl-room{fill:var(--ink-3);font-family:var(--font-ui);font-weight:600;letter-spacing:.08em}
+.pl-dim{fill:var(--ink);font-family:var(--font-num);font-weight:500}
+.pl-dimline{stroke:var(--ink);fill:none}
+.pl-sel{fill:none;stroke:var(--sel)}
+.pl-handle{fill:var(--panel);stroke:var(--sel)}
+.pl-hit{fill:transparent;stroke:transparent}
+.it-bar{fill:var(--f-bar);stroke:color-mix(in srgb,var(--f-bar) 60%,var(--ink))}
+.it-bartop{fill:var(--f-bar-top)}
+.it-seat{fill:var(--f-seat);stroke:color-mix(in srgb,var(--f-seat) 60%,var(--ink))}
+.it-seat2{fill:var(--f-seat-2)}
+.it-table{fill:var(--f-table);stroke:color-mix(in srgb,var(--f-table) 55%,var(--ink))}
+.it-stage{fill:var(--f-stage);stroke:color-mix(in srgb,var(--f-stage) 60%,var(--ink))}
+.it-equip{fill:var(--f-equip);stroke:color-mix(in srgb,var(--f-equip) 55%,var(--ink))}
+.it-fix{fill:var(--f-fix);stroke:var(--ink-3)}
+.it-plant{fill:var(--f-plant);stroke:color-mix(in srgb,var(--f-plant) 60%,var(--ink))}
+.it-ink{fill:var(--wall)}
+.it-line{fill:none;stroke:color-mix(in srgb,var(--ink) 55%,transparent)}
+.it-zone{fill:var(--f-zone);stroke:var(--accent);stroke-dasharray:6 4}
+.it-stair{fill:var(--panel);stroke:var(--ink-2)}
+.it-text{fill:var(--ink);font-family:var(--font-ui);font-weight:600}
+.it-notebg{fill:var(--panel);stroke:var(--accent)}
+.demo-item{opacity:.55}
+.is-demo .it-bar,.is-demo .it-seat,.is-demo .it-table,.is-demo .it-equip,.is-demo .it-stage,.is-demo .it-stair,.is-demo .it-fix{fill:url(#hatch-demo);stroke:var(--wall-demo);stroke-dasharray:4 3}
+.coll .it-bar,.coll .it-seat,.coll .it-table,.coll .it-equip,.coll .it-stage{stroke:var(--wall-demo)}
+
+/* phone */
+.mtabs{display:none}
+@media (max-width: 860px){
+  #app{grid-template-columns:minmax(0,1fr);grid-template-rows:auto minmax(0,1fr) auto;grid-template-areas:"top" "stage" "tabs"}
+  .top{padding:8px 12px;flex-wrap:wrap;gap:6px 6px}
+  .brand{flex:1;order:0}
+  #btnProposals,#btnSave,#btnExport,#btnHelp{order:1}
+  .top .spacer{flex-basis:100%;height:0;order:2}
+  .top .seg{order:3}
+  #undo,#redo{order:4}
+  .seg button{padding:6px 11px}
+  .brand .pname,.brand span{display:none}
+  .hide-m{display:none!important}
+  .left,.right{position:fixed;left:0;right:0;bottom:calc(56px + env(safe-area-inset-bottom,0px));max-height:62vh;z-index:25;border:1px solid var(--line);border-radius:16px 16px 0 0;box-shadow:var(--shadow)}
+  .left[data-open="false"],.right[data-open="false"]{display:none}
+  .mtabs{grid-area:tabs;display:grid;grid-template-columns:repeat(4,1fr);background:var(--panel);border-top:1px solid var(--line);padding:6px 8px calc(6px + env(safe-area-inset-bottom,0px))}
+  .mtabs button{border:0;background:transparent;padding:6px 2px;border-radius:8px;font-size:11.5px;font-weight:500;color:var(--ink-2);display:flex;flex-direction:column;align-items:center;gap:2px}
+  .mtabs button[aria-pressed="true"]{color:var(--accent);background:var(--accent-soft)}
+  .float-card{display:none}
+  .pcard{grid-template-columns:72px minmax(0,1fr)}
+  .pcard .thumb{width:72px;height:56px}
+  .pcard .acts{grid-column:1/-1;justify-content:flex-start}
+}
+@media (prefers-reduced-motion: no-preference){
+  .btn,.tool,.lib-item,.chip,.seg button{transition:background-color .12s,border-color .12s,color .12s}
+}
+</style>
+
+</head>
+<body>
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <defs>
+    <symbol id="ic-select" viewBox="0 0 24 24"><path d="M5 3l14 8-6 1.5L10 19z"/></symbol>
+    <symbol id="ic-wall" viewBox="0 0 24 24"><path d="M3 20V8h8v4h10"/><circle cx="3" cy="20" r="1.3"/><circle cx="21" cy="12" r="1.3"/></symbol>
+    <symbol id="ic-measure" viewBox="0 0 24 24"><path d="M3 16l13-13 5 5L8 21z"/><path d="M7 12l2 2M10 9l2 2M13 6l2 2"/></symbol>
+    <symbol id="ic-pan" viewBox="0 0 24 24"><path d="M12 3v18M3 12h18M12 3l-3 3M12 3l3 3M12 21l-3-3M12 21l3-3M3 12l3-3M3 12l3 3M21 12l-3-3M21 12l-3 3"/></symbol>
+    <symbol id="ic-undo" viewBox="0 0 24 24"><path d="M9 14L4 9l5-5"/><path d="M4 9h10a6 6 0 010 12h-3"/></symbol>
+    <symbol id="ic-redo" viewBox="0 0 24 24"><path d="M15 14l5-5-5-5"/><path d="M20 9H10a6 6 0 000 12h3"/></symbol>
+    <symbol id="ic-plus" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></symbol>
+    <symbol id="ic-minus" viewBox="0 0 24 24"><path d="M5 12h14"/></symbol>
+    <symbol id="ic-fit" viewBox="0 0 24 24"><path d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5"/></symbol>
+    <symbol id="ic-help" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M9.5 9.5a2.5 2.5 0 114 2c-1 .7-1.5 1.2-1.5 2.5M12 17h.01"/></symbol>
+    <symbol id="ic-folder" viewBox="0 0 24 24"><path d="M3 7a2 2 0 012-2h4l2 2h8a2 2 0 012 2v8a2 2 0 01-2 2H5a2 2 0 01-2-2z"/></symbol>
+    <symbol id="ic-export" viewBox="0 0 24 24"><path d="M12 3v12M7 10l5 5 5-5M4 19h16"/></symbol>
+    <symbol id="ic-trash" viewBox="0 0 24 24"><path d="M4 7h16M9 7V4h6v3M6 7l1 13h10l1-13"/></symbol>
+    <symbol id="ic-copy" viewBox="0 0 24 24"><rect x="8" y="8" width="12" height="12" rx="2"/><path d="M4 16V6a2 2 0 012-2h10"/></symbol>
+    <symbol id="ic-rot" viewBox="0 0 24 24"><path d="M20 11a8 8 0 10-2.3 5.7"/><path d="M20 4v7h-7"/></symbol>
+    <symbol id="ic-close" viewBox="0 0 24 24"><path d="M6 6l12 12M18 6L6 18"/></symbol>
+    <symbol id="ic-lock" viewBox="0 0 24 24"><rect x="5" y="11" width="14" height="9" rx="2"/><path d="M8 11V8a4 4 0 018 0v3"/></symbol>
+    <symbol id="ic-cube" viewBox="0 0 24 24"><path d="M12 3l8 4.5v9L12 21l-8-4.5v-9z"/><path d="M12 12l8-4.5M12 12v9M12 12L4 7.5"/></symbol>
+    <symbol id="ic-layers" viewBox="0 0 24 24"><path d="M12 3l9 5-9 5-9-5z"/><path d="M3 13l9 5 9-5"/></symbol>
+    <symbol id="ic-list" viewBox="0 0 24 24"><path d="M8 6h13M8 12h13M8 18h13M3 6h.01M3 12h.01M3 18h.01"/></symbol>
+    <symbol id="ic-sofa" viewBox="0 0 24 24"><path d="M4 11V8a2 2 0 012-2h12a2 2 0 012 2v3"/><path d="M2 12a2 2 0 014 0v2h12v-2a2 2 0 014 0v6H2z"/></symbol>
+    <symbol id="ic-sliders" viewBox="0 0 24 24"><path d="M4 6h10M18 6h2M4 12h4M12 12h8M4 18h12M20 18h0"/><circle cx="16" cy="6" r="2"/><circle cx="10" cy="12" r="2"/><circle cx="18" cy="18" r="2"/></symbol>
+  </defs>
+</svg>
+
+<div id="app">
+  <header class="top">
+    <div class="brand"><b>Barmuda</b><span>Romverksted</span><span class="pname" id="pname"></span></div>
+    <div class="spacer hide-m"></div>
+    <div class="seg" role="group" aria-label="Etasje">
+      <button id="f0" aria-pressed="true">1. etasje</button>
+      <button id="f1" aria-pressed="false">Mesanin</button>
+    </div>
+    <div class="seg" role="group" aria-label="Visning">
+      <button id="vPlan" aria-pressed="true">Plan</button>
+      <button id="v3d" aria-pressed="false">3D</button>
+    </div>
+    <div class="spacer"></div>
+    <button class="icon-btn" id="undo" title="Angre (Ctrl+Z)" aria-label="Angre"><svg class="i"><use href="#ic-undo"/></svg></button>
+    <button class="icon-btn" id="redo" title="Gjør om (Ctrl+Y)" aria-label="Gjør om"><svg class="i"><use href="#ic-redo"/></svg></button>
+    <button class="btn" id="btnProposals"><svg class="i"><use href="#ic-folder"/></svg><span class="hide-m">Forslag</span></button>
+    <button class="btn primary" id="btnSave"><span>Lagre</span></button>
+    <button class="icon-btn" id="btnExport" title="Eksporter" aria-label="Eksporter"><svg class="i"><use href="#ic-export"/></svg></button>
+    <button class="icon-btn" id="btnHelp" title="Hjelp" aria-label="Hjelp"><svg class="i"><use href="#ic-help"/></svg></button>
+  </header>
+
+  <aside class="left" id="left" data-open="false">
+    <div class="tools" role="toolbar" aria-label="Verktøy">
+      <button class="tool" data-tool="select" aria-pressed="true" title="Velg og flytt (V)"><svg class="i"><use href="#ic-select"/></svg>Velg<kbd>V</kbd></button>
+      <button class="tool" data-tool="wall" aria-pressed="false" title="Tegn vegg (W)"><svg class="i"><use href="#ic-wall"/></svg>Vegg<kbd>W</kbd></button>
+      <button class="tool" data-tool="measure" aria-pressed="false" title="Mål avstand (M)"><svg class="i"><use href="#ic-measure"/></svg>Mål<kbd>M</kbd></button>
+      <button class="tool" data-tool="pan" aria-pressed="false" title="Panorer (H)"><svg class="i"><use href="#ic-pan"/></svg>Flytt kart<kbd>H</kbd></button>
+    </div>
+    <div class="lib-head">
+      <h2>Legg til</h2>
+      <input class="search" id="libSearch" type="search" placeholder="Søk: bord, bar, scene …" aria-label="Søk i biblioteket">
+    </div>
+    <div class="lib" id="lib"></div>
+  </aside>
+
+  <main class="stage" id="stage">
+    <svg id="plan" aria-label="Plantegning"></svg>
+    <div id="three" hidden></div>
+    <div class="hint" id="hint" hidden></div>
+    <div class="compass" id="compass">Terrasse / Solsiden →</div>
+    <div class="scalebar" id="scalebar"><i id="scaleline"></i><span id="scaletext">1 m</span></div>
+    <div class="zoom" id="zoomCtl">
+      <button id="zin" aria-label="Zoom inn" title="Zoom inn"><svg class="i"><use href="#ic-plus"/></svg></button>
+      <button id="zout" aria-label="Zoom ut" title="Zoom ut"><svg class="i"><use href="#ic-minus"/></svg></button>
+      <button id="zfit" aria-label="Tilpass" title="Vis hele etasjen"><svg class="i"><use href="#ic-fit"/></svg></button>
+    </div>
+    <div class="view3d-bar" id="bar3d" hidden>
+      <button class="chip" data-cam="over">Oversikt</button>
+      <button class="chip" data-cam="inn">Fra inngangen</button>
+      <button class="chip" data-cam="bar">Mot baren</button>
+      <button class="chip" data-cam="mes">Fra mesaninen</button>
+      <button class="chip" id="tgMezz3d" aria-pressed="false">Mesanin skjult</button>
+      <button class="chip" id="shot3d">Lagre bilde</button>
+    </div>
+  </main>
+
+  <aside class="right" id="right" data-open="false"><div class="pane" id="pane"></div></aside>
+
+  <nav class="mtabs" id="mtabs">
+    <button data-m="lib"><svg class="i"><use href="#ic-sofa"/></svg>Legg til</button>
+    <button data-m="tools"><svg class="i"><use href="#ic-wall"/></svg>Verktøy</button>
+    <button data-m="insp"><svg class="i"><use href="#ic-sliders"/></svg>Egenskaper</button>
+    <button data-m="layers"><svg class="i"><use href="#ic-layers"/></svg>Lag</button>
+  </nav>
+</div>
+
+<div id="menuExport" class="menu" hidden>
+  <button data-exp="png"><b>Plantegning som bilde</b><span>PNG av etasjen du ser på</span></button>
+  <button data-exp="pngall"><b>Begge etasjer som bilde</b><span>PNG med 1. etasje og mesanin</span></button>
+  <button data-exp="svg"><b>Plantegning som vektor</b><span>SVG, kan åpnes i tegneprogram</span></button>
+  <button data-exp="csv"><b>Møbelliste</b><span>CSV med mål og plassering</span></button>
+  <button data-exp="json"><b>Planfil</b><span>JSON som kan åpnes her igjen</span></button>
+  <button data-exp="import"><b>Åpne planfil …</b><span>Last inn en JSON-planfil</span></button>
+</div>
+<input type="file" id="fileIn" accept=".json,application/json" hidden>
+<div id="dialogs"></div>
+<div class="toast" id="toast" hidden></div>
+
+<script id="model" type="application/json">{"version":1,"source":"https://my.matterport.com/show/?m=7XmfDvfjwQs","floors":[{"id":0,"name":"1. etasje","z":0,"ceil":2.45},{"id":1,"name":"Mesanin","z":2.65,"ceil":2.3}],"walls":[{"id":"w1","f":0,"a":[5.96,0.9],"b":[13.02,0.9],"t":0.16,"h":2.63,"ext":true,"st":"ex","ops":[]},{"id":"w2","f":0,"a":[13.02,0.9],"b":[13.02,1.35],"t":0.16,"h":2.63,"ext":true,"st":"ex","ops":[]},{"id":"w3","f":0,"a":[13.02,1.35],"b":[13.41,1.35],"t":0.16,"h":2.63,"ext":true,"st":"ex","ops":[]},{"id":"w4","f":0,"a":[13.41,1.35],"b":[13.41,11.19],"t":0.2,"h":2.63,"ext":true,"st":"ex","ops":[{"id":"o4_0","type":"double","at":1.15,"w":1.7,"h":2.2,"sill":0},{"id":"o4_1","type":"window","at":5.27,"w":1.1,"h":1.4,"sill":0.8},{"id":"o4_2","type":"double","at":7.48,"w":1.78,"h":2.2,"sill":0}]},{"id":"w5","f":0,"a":[13.41,11.19],"b":[4.02,11.19],"t":0.16,"h":2.63,"ext":true,"st":"ex","ops":[{"id":"o5_0","type":"door","at":1.41,"w":0.85,"h":2.1,"sill":0}]},{"id":"w6","f":0,"a":[4.02,11.19],"b":[1.77,11.19],"t":0.16,"h":2.63,"ext":true,"st":"ex","ops":[]},{"id":"w7","f":0,"a":[1.77,11.19],"b":[1.77,7.25],"t":0.16,"h":2.63,"ext":true,"st":"ex","ops":[{"id":"o7_0","type":"door","at":1.77,"w":0.91,"h":2.1,"sill":0}]},{"id":"w8","f":0,"a":[1.77,7.25],"b":[3.21,7.25],"t":0.16,"h":2.63,"ext":true,"st":"ex","ops":[]},{"id":"w9","f":0,"a":[3.21,7.25],"b":[3.21,6.89],"t":0.16,"h":2.63,"ext":true,"st":"ex","ops":[]},{"id":"w10","f":0,"a":[3.21,6.89],"b":[4.02,6.89],"t":0.16,"h":2.63,"ext":true,"st":"ex","ops":[]},{"id":"w11","f":0,"a":[4.02,11.19],"b":[4.02,6.89],"t":0.12,"h":2.63,"ext":false,"st":"ex","ops":[{"id":"o11_0","type":"door","at":2.84,"w":0.77,"h":2.1,"sill":0}],"note":"Vegg mellom lokale og lager"},{"id":"w12","f":0,"a":[4.02,6.89],"b":[4.01,2.58],"t":0.16,"h":2.63,"ext":true,"st":"ex","ops":[]},{"id":"w13","f":0,"a":[4.01,5.11],"b":[5.67,5.11],"t":0.13,"h":2.63,"ext":false,"st":"ex","ops":[],"note":"WC-vegg"},{"id":"w14","f":0,"a":[5.67,5.11],"b":[5.67,3.75],"t":0.12,"h":2.63,"ext":false,"st":"ex","ops":[],"note":"WC-vegg"},{"id":"w15","f":0,"a":[5.67,3.75],"b":[5.97,3.75],"t":0.12,"h":2.63,"ext":false,"st":"ex","ops":[],"note":"WC-vegg"},{"id":"w16","f":0,"a":[5.97,3.75],"b":[5.97,2.58],"t":0.12,"h":2.63,"ext":false,"st":"ex","ops":[{"id":"o16_0","type":"door","at":0.585,"w":0.8,"h":2.1,"sill":0}],"note":"WC-vegg med d\u00f8r"},{"id":"w17","f":0,"a":[5.97,3.88],"b":[6.42,3.88],"t":0.12,"h":2.63,"ext":false,"st":"ex","ops":[],"note":"Kort veggende ved WC"},{"id":"w18","f":0,"a":[5.97,2.58],"b":[4.01,2.58],"t":0.16,"h":2.63,"ext":true,"st":"ex","ops":[]},{"id":"w19","f":0,"a":[5.96,2.58],"b":[5.96,0.9],"t":0.16,"h":2.63,"ext":true,"st":"ex","ops":[]},{"id":"w20","f":1,"a":[0.38,3.88],"b":[0.38,11.19],"t":0.16,"h":2.3,"ext":true,"st":"ex","ops":[]},{"id":"w21","f":1,"a":[0.38,11.19],"b":[11.92,11.19],"t":0.16,"h":2.3,"ext":true,"st":"ex","ops":[],"note":"Yttervegg; delen til h\u00f8yre st\u00e5r over \u00e5pent rom"},{"id":"w22","f":1,"a":[11.92,11.19],"b":[11.92,0.85],"t":0.16,"h":2.3,"ext":true,"st":"ex","ops":[],"note":"Vegg over dobbel takh\u00f8yde (fra skanningen)"},{"id":"w23","f":1,"a":[11.92,0.85],"b":[11.04,0.85],"t":0.16,"h":2.3,"ext":true,"st":"ex","ops":[]},{"id":"w24","f":1,"a":[11.04,0.85],"b":[11.04,1.3],"t":0.16,"h":2.3,"ext":true,"st":"ex","ops":[]},{"id":"w25","f":1,"a":[11.04,1.3],"b":[10.59,1.3],"t":0.16,"h":2.3,"ext":true,"st":"ex","ops":[]},{"id":"w26","f":1,"a":[10.59,1.3],"b":[10.59,0.85],"t":0.16,"h":2.3,"ext":true,"st":"ex","ops":[]},{"id":"w27","f":1,"a":[10.59,0.85],"b":[6.36,0.85],"t":0.16,"h":2.3,"ext":true,"st":"ex","ops":[]},{"id":"w28","f":1,"a":[6.36,0.86],"b":[6.36,0.41],"t":0.16,"h":2.3,"ext":true,"st":"ex","ops":[]},{"id":"w29","f":1,"a":[6.36,0.41],"b":[4.65,0.41],"t":0.16,"h":2.3,"ext":true,"st":"ex","ops":[]},{"id":"w30","f":1,"a":[4.65,0.41],"b":[3.69,0.41],"t":0.16,"h":2.3,"ext":true,"st":"ex","ops":[]},{"id":"w31","f":1,"a":[3.69,0.41],"b":[2.72,0.41],"t":0.16,"h":2.3,"ext":true,"st":"ex","ops":[]},{"id":"w32","f":1,"a":[2.72,0.41],"b":[1.74,0.41],"t":0.16,"h":2.3,"ext":true,"st":"ex","ops":[]},{"id":"w33","f":1,"a":[1.74,0.41],"b":[1.74,0.16],"t":0.16,"h":2.3,"ext":true,"st":"ex","ops":[]},{"id":"w34","f":1,"a":[1.74,0.16],"b":[0.43,0.16],"t":0.16,"h":2.3,"ext":true,"st":"ex","ops":[]},{"id":"w35","f":1,"a":[0.43,0.16],"b":[0.43,2.51],"t":0.16,"h":2.3,"ext":true,"st":"ex","ops":[]},{"id":"w36","f":1,"a":[0.43,2.51],"b":[0.11,2.51],"t":0.16,"h":2.3,"ext":true,"st":"ex","ops":[]},{"id":"w37","f":1,"a":[0.11,2.51],"b":[0.11,3.88],"t":0.16,"h":2.3,"ext":true,"st":"ex","ops":[{"id":"o37_0","type":"door","at":0.7,"w":1.0,"h":2.1,"sill":0}],"note":"D\u00f8r til bakre trapperom"},{"id":"w38","f":1,"a":[0.11,3.88],"b":[0.38,3.88],"t":0.16,"h":2.3,"ext":true,"st":"ex","ops":[]},{"id":"w39","f":1,"a":[4.65,0.41],"b":[4.65,1.67],"t":0.05,"h":2.3,"ext":false,"st":"ex","ops":[],"note":"Toalettb\u00e5s"},{"id":"w40","f":1,"a":[3.69,0.41],"b":[3.69,1.67],"t":0.05,"h":2.3,"ext":false,"st":"ex","ops":[],"note":"Toalettb\u00e5s"},{"id":"w41","f":1,"a":[2.72,0.41],"b":[2.72,1.67],"t":0.05,"h":2.3,"ext":false,"st":"ex","ops":[],"note":"Toalettb\u00e5s"},{"id":"w42","f":1,"a":[6.36,0.86],"b":[6.36,1.67],"t":0.12,"h":2.3,"ext":false,"st":"ex","ops":[],"note":"Toalettb\u00e5s"},{"id":"w43","f":1,"a":[1.74,0.41],"b":[1.74,1.67],"t":0.12,"h":2.3,"ext":false,"st":"ex","ops":[]},{"id":"w44","f":1,"a":[1.74,1.67],"b":[2.72,1.67],"t":0.05,"h":2.3,"ext":false,"st":"ex","ops":[{"id":"o44_0","type":"door","at":0.49,"w":0.6,"h":2.1,"sill":0}],"note":"Toalettb\u00e5s"},{"id":"w45","f":1,"a":[2.72,1.67],"b":[3.69,1.67],"t":0.05,"h":2.3,"ext":false,"st":"ex","ops":[{"id":"o45_0","type":"door","at":0.485,"w":0.6,"h":2.1,"sill":0}],"note":"Toalettb\u00e5s"},{"id":"w46","f":1,"a":[3.69,1.67],"b":[4.65,1.67],"t":0.05,"h":2.3,"ext":false,"st":"ex","ops":[{"id":"o46_0","type":"door","at":0.48,"w":0.6,"h":2.1,"sill":0}],"note":"Toalettb\u00e5s"},{"id":"w47","f":1,"a":[4.65,1.67],"b":[6.36,1.67],"t":0.05,"h":2.3,"ext":false,"st":"ex","ops":[{"id":"o47_0","type":"door","at":1.05,"w":0.62,"h":2.1,"sill":0}],"note":"Toalettb\u00e5s"},{"id":"w48","f":1,"a":[1.74,1.67],"b":[1.74,2.83],"t":0.12,"h":2.3,"ext":false,"st":"ex","ops":[{"id":"o48_0","type":"door","at":0.58,"w":0.9,"h":2.1,"sill":0}],"note":"D\u00f8r til bakre trapp"},{"id":"w49","f":1,"a":[1.74,2.83],"b":[4.57,2.83],"t":0.12,"h":2.3,"ext":false,"st":"ex","ops":[]},{"id":"w50","f":1,"a":[4.57,2.83],"b":[4.57,3.88],"t":0.12,"h":2.3,"ext":false,"st":"ex","ops":[]},{"id":"w51","f":1,"a":[0.38,3.88],"b":[7.45,3.88],"t":0.12,"h":2.3,"ext":false,"st":"ex","ops":[],"note":"Vegg mellom toaletter og mesanin"},{"id":"w52","f":1,"a":[7.45,3.88],"b":[7.45,1.93],"t":0.13,"h":2.3,"ext":false,"st":"ex","ops":[]},{"id":"w53","f":1,"a":[6.17,3.88],"b":[6.17,4.58],"t":0.12,"h":2.3,"ext":false,"st":"ex","ops":[]},{"id":"w54","f":1,"a":[6.17,4.58],"b":[6.63,4.58],"t":0.12,"h":2.3,"ext":false,"st":"ex","ops":[]},{"id":"w55","f":1,"a":[6.63,4.58],"b":[6.63,3.88],"t":0.12,"h":2.3,"ext":false,"st":"ex","ops":[]}],"items":[{"id":"e1","kind":"column","f":0,"x":6.25,"y":4.64,"w":0.36,"d":0.36,"rot":0,"st":"ex","name":"S\u00f8yle","lock":true,"note":"Posisjon fra Matterport-plantegningen."},{"id":"e2","kind":"column","f":0,"x":9.35,"y":4.6,"w":0.35,"d":0.35,"rot":0,"st":"ex","name":"S\u00f8yle (mosaikk)","lock":true,"note":"Posisjon triangulert fra 360-bilder. B\u00e6rer trolig mesaninen."},{"id":"e3","kind":"column","f":0,"x":6.2,"y":10.5,"w":0.35,"d":0.35,"rot":0,"st":"ex","name":"S\u00f8yle (mosaikk)","lock":true,"note":"Posisjon triangulert fra 360-bilder. B\u00e6rer trolig mesaninen."},{"id":"e4","kind":"stair","f":0,"x":9.725,"y":10.505,"w":3.39,"d":1.23,"rot":180,"st":"ex","name":"Trapp til mesanin","lock":true,"z0":0.55,"z1":2.65,"steps":12,"both":true,"note":"Stiger mot venstre fra podiet ved inngangen. Fra plantegning og skanning."},{"id":"e5","kind":"steps","f":0,"x":10.99,"y":8.86,"w":0.86,"d":1.9,"rot":0,"st":"ex","name":"Trinn opp til podiet","lock":true,"z0":0.0,"z1":0.55,"steps":3,"note":"Trinn fra hovedgulvet opp mot terrassed\u00f8ren."},{"id":"e6","kind":"rail","f":0,"x":10.56,"y":6.27,"w":3.28,"d":0.05,"rot":90,"st":"ex","name":"Rekkverk podium","z0":0.55},{"id":"e7","kind":"rail","f":0,"x":10.99,"y":7.91,"w":0.86,"d":0.05,"rot":0,"st":"ex","name":"Rekkverk podium","z0":0.55},{"id":"e8","kind":"bar_u","f":0,"x":7.01,"y":6.45,"w":4.62,"d":2.86,"rot":0,"st":"ex","name":"Dagens hovedbar","fixed":true,"note":"Buet bar med lysende front. Omriss fra skanningen (ovenfra); m\u00e5l \u00b1 0,1 m."},{"id":"e9","kind":"backbar","f":0,"x":4.42,"y":6.45,"w":2.6,"d":0.6,"rot":90,"st":"ex","name":"Dagens bakbar","fixed":true},{"id":"e10","kind":"fridge","f":0,"x":4.42,"y":5.5,"w":0.6,"d":0.65,"rot":90,"st":"ex","name":"Kj\u00f8leskap bak bar"},{"id":"e11","kind":"toilet","f":0,"x":4.5,"y":4.05,"w":0.4,"d":0.62,"rot":90,"st":"ex","name":"Toalett","fixed":true},{"id":"e12","kind":"basin","f":0,"x":5.43,"y":4.8,"w":0.55,"d":0.4,"rot":180,"st":"ex","name":"Servant","fixed":true},{"id":"e13","kind":"basin","f":0,"x":2.9,"y":7.3,"w":0.6,"d":0.45,"rot":0,"st":"ex","name":"Vask p\u00e5 lager","fixed":true},{"id":"e14","kind":"banquette","f":0,"x":4.4,"y":9.95,"w":2.4,"d":0.6,"rot":90,"st":"ex","name":"Fastmontert benk","fixed":true},{"id":"e15","kind":"banquette","f":0,"x":5.6,"y":10.82,"w":1.9,"d":0.6,"rot":180,"st":"ex","name":"Fastmontert benk","fixed":true},{"id":"e16","kind":"table_oval","f":0,"x":5.35,"y":9.9,"w":1.1,"d":0.7,"rot":90,"st":"ex","name":"Ovalt bord"},{"id":"e17","kind":"table_round","f":0,"x":7.0,"y":9.6,"w":0.7,"d":0.7,"rot":0,"st":"ex","name":"Bord"},{"id":"e18","kind":"table_round","f":0,"x":7.9,"y":9.3,"w":0.7,"d":0.7,"rot":0,"st":"ex","name":"Bord"},{"id":"e19","kind":"armchair","f":0,"x":7.0,"y":8.9,"w":0.62,"d":0.62,"rot":0,"st":"ex","name":"Lenestol"},{"id":"e20","kind":"armchair","f":0,"x":8.5,"y":8.9,"w":0.62,"d":0.62,"rot":-40,"st":"ex","name":"Lenestol"},{"id":"e21","kind":"armchair","f":0,"x":8.5,"y":9.8,"w":0.62,"d":0.62,"rot":-120,"st":"ex","name":"Lenestol"},{"id":"e22","kind":"armchair","f":0,"x":7.0,"y":10.3,"w":0.62,"d":0.62,"rot":180,"st":"ex","name":"Lenestol"},{"id":"e23","kind":"booth","f":0,"x":8.65,"y":1.95,"w":1.9,"d":1.6,"rot":90,"st":"ex","name":"B\u00e5s","note":"B\u00e5s i opph\u00f8yd sone.","fixed":true},{"id":"e24","kind":"sofa","f":0,"x":12.0,"y":1.35,"w":2.2,"d":0.8,"rot":0,"st":"ex","name":"Sofa","z0":0.55},{"id":"e25","kind":"table_round","f":0,"x":11.9,"y":2.3,"w":0.7,"d":0.7,"rot":0,"st":"ex","name":"Bord","z0":0.55},{"id":"e26","kind":"armchair","f":0,"x":11.1,"y":2.7,"w":0.62,"d":0.62,"rot":60,"st":"ex","name":"Lenestol","z0":0.55},{"id":"e27","kind":"armchair","f":0,"x":12.7,"y":2.8,"w":0.62,"d":0.62,"rot":-60,"st":"ex","name":"Lenestol","z0":0.55},{"id":"e28","kind":"table_high","f":0,"x":12.2,"y":5.5,"w":0.6,"d":0.6,"rot":0,"st":"ex","name":"St\u00e5bord","z0":0.55},{"id":"e29","kind":"dj","f":0,"x":12.85,"y":6.65,"w":1.6,"d":0.65,"rot":-90,"st":"ex","name":"DJ-pult","z0":0.55},{"id":"e30","kind":"table_round","f":0,"x":11.5,"y":6.9,"w":0.7,"d":0.7,"rot":0,"st":"ex","name":"Bord (mosaikk)","z0":0.55},{"id":"e31","kind":"bar_straight","f":1,"x":3.55,"y":9.85,"w":3.2,"d":0.7,"rot":0,"st":"ex","name":"Dagens \u00f8vre bar","fixed":true,"note":"Ansl\u00e5tt fra skanningen ovenfra."},{"id":"e32","kind":"backbar","f":1,"x":3.55,"y":10.82,"w":3.4,"d":0.55,"rot":180,"st":"ex","name":"Bakbar \u00f8vre bar","fixed":true},{"id":"e33","kind":"banquette","f":1,"x":0.75,"y":6.1,"w":4.2,"d":0.6,"rot":90,"st":"ex","name":"Fastmontert benk","fixed":true},{"id":"e34","kind":"banquette","f":1,"x":3.2,"y":4.25,"w":5.0,"d":0.6,"rot":0,"st":"ex","name":"Fastmontert benk","fixed":true},{"id":"e35","kind":"table_round","f":1,"x":1.7,"y":5.8,"w":0.7,"d":0.7,"rot":0,"st":"ex","name":"Bord"},{"id":"e36","kind":"table_round","f":1,"x":3.9,"y":5.1,"w":0.7,"d":0.7,"rot":0,"st":"ex","name":"Bord"},{"id":"e37","kind":"table_round","f":1,"x":1.7,"y":7.3,"w":0.7,"d":0.7,"rot":0,"st":"ex","name":"Bord"},{"id":"e38","kind":"chair","f":1,"x":2.5,"y":5.8,"w":0.48,"d":0.5,"rot":-90,"st":"ex","name":"Stol"},{"id":"e39","kind":"chair","f":1,"x":4.7,"y":5.1,"w":0.48,"d":0.5,"rot":-90,"st":"ex","name":"Stol"},{"id":"e40","kind":"chair","f":1,"x":2.5,"y":7.3,"w":0.48,"d":0.5,"rot":-90,"st":"ex","name":"Stol"},{"id":"e41","kind":"chair","f":1,"x":3.9,"y":5.9,"w":0.48,"d":0.5,"rot":-90,"st":"ex","name":"Stol"},{"id":"e42","kind":"sofa","f":1,"x":9.0,"y":6.3,"w":2.0,"d":0.8,"rot":-62,"st":"ex","name":"Sofa langs rekkverk"},{"id":"e43","kind":"sofa","f":1,"x":7.2,"y":8.6,"w":2.0,"d":0.8,"rot":-32,"st":"ex","name":"Sofa langs rekkverk"},{"id":"e44","kind":"sofa","f":1,"x":9.6,"y":3.8,"w":2.0,"d":0.8,"rot":-90,"st":"ex","name":"Sofa langs rekkverk"},{"id":"e45","kind":"table_round","f":1,"x":8.3,"y":5.8,"w":0.7,"d":0.7,"rot":0,"st":"ex","name":"Bord"},{"id":"e46","kind":"table_round","f":1,"x":6.8,"y":8.0,"w":0.7,"d":0.7,"rot":0,"st":"ex","name":"Bord"},{"id":"e47","kind":"table_round","f":1,"x":8.8,"y":3.8,"w":0.7,"d":0.7,"rot":0,"st":"ex","name":"Bord"},{"id":"e48","kind":"toilet","f":1,"x":2.23,"y":0.75,"w":0.4,"d":0.62,"rot":180,"st":"ex","name":"Toalett","fixed":true},{"id":"e49","kind":"toilet","f":1,"x":3.2,"y":0.75,"w":0.4,"d":0.62,"rot":180,"st":"ex","name":"Toalett","fixed":true},{"id":"e50","kind":"toilet","f":1,"x":4.17,"y":0.75,"w":0.4,"d":0.62,"rot":180,"st":"ex","name":"Toalett","fixed":true},{"id":"e51","kind":"toilet","f":1,"x":5.15,"y":0.75,"w":0.4,"d":0.62,"rot":180,"st":"ex","name":"Toalett","fixed":true},{"id":"e52","kind":"toilet","f":1,"x":5.9,"y":0.75,"w":0.4,"d":0.62,"rot":180,"st":"ex","name":"Toalett","fixed":true},{"id":"e53","kind":"urinal","f":1,"x":0.65,"y":0.54,"w":0.35,"d":0.3,"rot":90,"st":"ex","name":"Urinal","fixed":true},{"id":"e54","kind":"urinal","f":1,"x":0.65,"y":1.35,"w":0.35,"d":0.3,"rot":90,"st":"ex","name":"Urinal","fixed":true},{"id":"e55","kind":"urinal","f":1,"x":0.65,"y":2.04,"w":0.35,"d":0.3,"rot":90,"st":"ex","name":"Urinal","fixed":true},{"id":"e56","kind":"basin","f":1,"x":5.05,"y":3.6,"w":0.55,"d":0.45,"rot":0,"st":"ex","name":"Servant","fixed":true},{"id":"e57","kind":"basin","f":1,"x":5.85,"y":3.6,"w":0.55,"d":0.45,"rot":0,"st":"ex","name":"Servant","fixed":true},{"id":"e58","kind":"basin","f":1,"x":6.65,"y":3.6,"w":0.55,"d":0.45,"rot":0,"st":"ex","name":"Servant","fixed":true},{"id":"pier1","f":0,"kind":"pier","x":12.955,"y":4.49,"w":0.83,"d":0.36,"rot":0,"st":"ex","lock":true,"name":"Pilaster i fasade"}],"levels":[{"id":"lv1","f":0,"name":"Podium ved fasaden","z":0.55,"st":"ex","poly":[[10.56,0.9],[13.02,0.9],[13.02,1.35],[13.41,1.35],[13.41,11.19],[11.42,11.19],[11.42,7.91],[10.56,7.91]],"lp":[12.75,9.45],"note":"Ca. 0,55 m over hovedgulvet (fra kamerah\u00f8yder i skanningen). Inngang og terrassed\u00f8rer ligger p\u00e5 dette niv\u00e5et."},{"id":"lv2","f":0,"name":"Opph\u00f8yd b\u00e5s-sone","z":0.21,"st":"ex","poly":[[7.47,0.9],[10.56,0.9],[10.56,4.63],[10.4,4.63],[9.4,3.45],[7.47,3.4]],"lp":[10.05,1.45],"note":"Ca. 0,2 m over hovedgulvet (ansl\u00e5tt fra kamerah\u00f8yder)."}],"rooms":[{"id":"r1","f":0,"name":"Hovedrom","area":85.7,"dims":"9,34 \u00d7 10,16 m","poly":[[5.96,0.9],[13.02,0.9],[13.02,1.35],[13.41,1.35],[13.41,11.19],[4.02,11.19],[4.02,5.11],[5.67,5.11],[5.67,3.75],[5.97,3.75],[5.96,2.58],[5.96,0.9]]},{"id":"r2","f":0,"name":"Lager","area":8.3,"dims":"2,12 \u00d7 3,81 m","poly":[[1.77,7.25],[3.21,7.25],[3.21,6.89],[4.02,6.89],[4.02,11.19],[1.77,11.19]]},{"id":"r3","f":0,"name":"WC","area":4.0,"dims":"1,79 \u00d7 2,17 m","poly":[[4.01,2.58],[5.96,2.58],[5.97,3.75],[5.67,3.75],[5.67,5.11],[4.01,5.11]]},{"id":"r4","f":1,"name":"Mesanin","area":null,"dims":"ca. 9,9 \u00d7 7,2 m","poly":[[0.11,0.16],[1.74,0.16],[1.74,0.41],[6.36,0.41],[6.36,0.85],[8.5,0.85],[8.83,0.95],[9.2,1.06],[9.44,1.18],[9.61,1.3],[9.75,1.41],[9.87,1.53],[9.98,1.65],[10.06,1.76],[10.13,1.88],[10.2,2.0],[10.25,2.12],[10.29,2.23],[10.33,2.35],[10.35,2.47],[10.38,2.58],[10.39,2.7],[10.4,2.93],[10.39,3.17],[10.38,3.5],[10.37,3.8],[10.37,5.27],[10.35,5.39],[10.33,5.62],[10.28,5.86],[10.24,6.09],[10.17,6.33],[10.07,6.56],[9.97,6.79],[9.85,7.03],[9.7,7.26],[9.51,7.5],[9.3,7.73],[9.03,7.96],[8.71,8.2],[8.32,8.43],[8.06,8.55],[7.85,8.67],[7.85,9.85],[8.03,9.85],[8.03,11.19],[0.38,11.19],[0.38,3.88],[0.11,3.88]]},{"id":"r5","f":1,"name":"Toaletter","area":null,"dims":"7,29 \u00d7 2,94 m","poly":[]}],"slab":[[0.11,0.16],[1.74,0.16],[1.74,0.41],[6.36,0.41],[6.36,0.85],[8.5,0.85],[8.83,0.95],[9.2,1.06],[9.44,1.18],[9.61,1.3],[9.75,1.41],[9.87,1.53],[9.98,1.65],[10.06,1.76],[10.13,1.88],[10.2,2.0],[10.25,2.12],[10.29,2.23],[10.33,2.35],[10.35,2.47],[10.38,2.58],[10.39,2.7],[10.4,2.93],[10.39,3.17],[10.38,3.5],[10.37,3.8],[10.37,5.27],[10.35,5.39],[10.33,5.62],[10.28,5.86],[10.24,6.09],[10.17,6.33],[10.07,6.56],[9.97,6.79],[9.85,7.03],[9.7,7.26],[9.51,7.5],[9.3,7.73],[9.03,7.96],[8.71,8.2],[8.32,8.43],[8.06,8.55],[7.85,8.67],[7.85,9.85],[8.03,9.85],[8.03,11.19],[0.38,11.19],[0.38,3.88],[0.11,3.88]],"mezzEdge":[[8.5,0.85],[8.83,0.95],[9.2,1.06],[9.44,1.18],[9.61,1.3],[9.75,1.41],[9.87,1.53],[9.98,1.65],[10.06,1.76],[10.13,1.88],[10.2,2.0],[10.25,2.12],[10.29,2.23],[10.33,2.35],[10.35,2.47],[10.38,2.58],[10.39,2.7],[10.4,2.93],[10.39,3.17],[10.38,3.5],[10.37,3.8],[10.37,5.27],[10.35,5.39],[10.33,5.62],[10.28,5.86],[10.24,6.09],[10.17,6.33],[10.07,6.56],[9.97,6.79],[9.85,7.03],[9.7,7.26],[9.51,7.5],[9.3,7.73],[9.03,7.96],[8.71,8.2],[8.32,8.43],[8.06,8.55],[7.85,8.67],[7.85,9.85]],"void":[[8.5,0.85],[11.92,0.85],[11.92,11.19],[11.42,11.19],[11.42,9.85],[8.03,9.85],[7.85,9.85],[7.85,8.67],[8.06,8.55],[8.32,8.43],[8.71,8.2],[9.03,7.96],[9.3,7.73],[9.51,7.5],[9.7,7.26],[9.85,7.03],[9.97,6.79],[10.07,6.56],[10.17,6.33],[10.24,6.09],[10.28,5.86],[10.33,5.62],[10.35,5.39],[10.37,5.27],[10.37,3.8],[10.38,3.5],[10.39,3.17],[10.4,2.93],[10.39,2.7],[10.38,2.58],[10.35,2.47],[10.33,2.35],[10.29,2.23],[10.25,2.12],[10.2,2.0],[10.13,1.88],[10.06,1.76],[9.98,1.65],[9.87,1.53],[9.75,1.41],[9.61,1.3],[9.44,1.18],[9.2,1.06],[8.83,0.95],[8.5,0.85]],"shaft":[[1.74,2.83],[4.57,2.83],[4.57,3.88],[1.74,3.88]],"patio":[[13.41,-0.39],[19.61,-0.39],[19.61,5.02],[21.4,5.02],[21.4,11.19],[13.41,11.19]]}</script>
+<script>
+"use strict";
+/* ===================== Barmuda Romverksted ===================== */
+const BASE = JSON.parse(document.getElementById("model").textContent);
+const $ = (s, r = document) => r.querySelector(s);
+const $$ = (s, r = document) => [...r.querySelectorAll(s)];
+const clone = o => JSON.parse(JSON.stringify(o));
+const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
+const r2 = v => Math.round(v * 100) / 100;
+const fmt = (v, d = 2) => (Math.round(v * 10 ** d) / 10 ** d).toFixed(d).replace(".", ",");
+const fm = v => fmt(v) + " m";
+const esc = s => String(s ?? "").replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+let _uid = 0;
+const uid = p => p + Date.now().toString(36).slice(-5) + (++_uid).toString(36) + Math.random().toString(36).slice(2, 5);
+const parseNum = s => { const v = parseFloat(String(s).replace(",", ".")); return Number.isFinite(v) ? v : null; };
+const dist = (a, b) => Math.hypot(b[0] - a[0], b[1] - a[1]);
+const rad = d => d * Math.PI / 180;
+function rotPt(x, y, deg) { const a = rad(deg), c = Math.cos(a), s = Math.sin(a); return [x * c - y * s, x * s + y * c]; }
+function inPoly(p, poly) { let yes = false; for (let i = 0, j = poly.length - 1; i < poly.length; j = i++) { const a = poly[i], b = poly[j]; if ((a[1] > p[1]) !== (b[1] > p[1]) && p[0] < (b[0] - a[0]) * (p[1] - a[1]) / (b[1] - a[1]) + a[0]) yes = !yes; } return yes; }
+function projSeg(p, a, b) { const dx = b[0] - a[0], dy = b[1] - a[1], L2 = dx * dx + dy * dy || 1e-9; let t = ((p[0] - a[0]) * dx + (p[1] - a[1]) * dy) / L2; const tc = clamp(t, 0, 1); const q = [a[0] + dx * tc, a[1] + dy * tc]; return { t, tc, q, d: dist(p, q) }; }
+function polyArea(poly) { let s = 0; for (let i = 0; i < poly.length; i++) { const a = poly[i], b = poly[(i + 1) % poly.length]; s += a[0] * b[1] - b[0] * a[1]; } return Math.abs(s) / 2; }
+function centroid(poly) { let x = 0, y = 0; poly.forEach(p => { x += p[0]; y += p[1]; }); return [x / poly.length, y / poly.length]; }
+function corners(it, pad = 0) { return [[-1, -1], [1, -1], [1, 1], [-1, 1]].map(([sx, sy]) => { const [x, y] = rotPt(sx * (it.w / 2 + pad), sy * (it.d / 2 + pad), it.rot || 0); return [it.x + x, it.y + y]; }); }
+function segInter(p1, p2, p3, p4) { const d = (p2[0] - p1[0]) * (p4[1] - p3[1]) - (p2[1] - p1[1]) * (p4[0] - p3[0]); if (Math.abs(d) < 1e-9) return false; const t = ((p3[0] - p1[0]) * (p4[1] - p3[1]) - (p3[1] - p1[1]) * (p4[0] - p3[0])) / d; const u = ((p3[0] - p1[0]) * (p2[1] - p1[1]) - (p3[1] - p1[1]) * (p2[0] - p1[0])) / d; return t > 0 && t < 1 && u > 0 && u < 1; }
+function polysOverlap(A, B) { for (let i = 0; i < A.length; i++) for (let j = 0; j < B.length; j++) if (segInter(A[i], A[(i + 1) % A.length], B[j], B[(j + 1) % B.length])) return true; return inPoly(A[0], B) || inPoly(B[0], A); }
+
+/* ===================== Catalogue ===================== */
+const G = { bar: "Bar og servering", seat: "Bord og sitteplasser", show: "Scene og underholdning", equip: "Utstyr", build: "Bygg og soner", other: "Annet" };
+const R = (x, y, w, h, c, rx = 0) => `<rect x="${r2(x * 1000) / 1000}" y="${r2(y * 1000) / 1000}" width="${Math.max(0, w).toFixed(3)}" height="${Math.max(0, h).toFixed(3)}" rx="${rx}" class="${c}"/>`;
+const C = (x, y, r, c) => `<circle cx="${x.toFixed(3)}" cy="${y.toFixed(3)}" r="${Math.max(0.005, r).toFixed(3)}" class="${c}"/>`;
+const L = (x1, y1, x2, y2, c = "it-line") => `<line x1="${x1.toFixed(3)}" y1="${y1.toFixed(3)}" x2="${x2.toFixed(3)}" y2="${y2.toFixed(3)}" class="${c}"/>`;
+const T = (x, y, s, size, c = "it-text", extra = "") => `<text x="${x}" y="${y}" font-size="${size}" text-anchor="middle" dominant-baseline="central" class="${c}" ${extra}>${esc(s)}</text>`;
+
+function chairSVG(x, y, w, d, rot) { return `<g transform="translate(${x},${y}) rotate(${rot})">${R(-w / 2, -d / 2 + 0.09, w, d - 0.09, "it-seat", 0.05)}${R(-w / 2, -d / 2, w, 0.1, "it-seat", 0.03)}</g>`; }
+function stadium(w, d, t) {
+  const r = d / 2, xr = w / 2 - r, xl = -w / 2, ri = r - t;
+  return `M${xl},${-r} L${xr},${-r} A${r},${r} 0 0 1 ${xr},${r} L${xl},${r} L${xl},${r - t} L${xr},${r - t} A${ri},${ri} 0 0 0 ${xr},${-r + t} L${xl},${-r + t} Z`;
+}
+function stairSVG(w, d, n) {
+  let s = R(-w / 2, -d / 2, w, d, "it-stair");
+  for (let i = 1; i < n; i++) { const x = -w / 2 + w * i / n; s += L(x, -d / 2, x, d / 2); }
+  const y = 0, x0 = -w / 2 + 0.12, x1 = w / 2 - 0.12;
+  s += `<path d="M${x0},${y} L${x1},${y} M${x1 - 0.14},${y - 0.09} L${x1},${y} L${x1 - 0.14},${y + 0.09}" class="it-line" style="stroke-width:1.4"/>`;
+  s += C(x0, y, 0.04, "it-ink");
+  return s;
+}
+const CAT = {
+  // ---- Bar & servering
+  bar_straight: { n: "Bardisk, rett", g: "bar", w: 2.5, d: 0.7, h: 1.1, bar: it => it.w, tags: "bar disk tapp", draw: (w, d) => R(-w / 2, -d / 2, w, d, "it-bar", 0.03) + R(-w / 2 + 0.05, -d / 2 + 0.05, w - 0.1, d - 0.22, "it-bartop", 0.02) },
+  bar_l: { n: "Bardisk, L-form", g: "bar", w: 2.8, d: 1.8, h: 1.1, bar: it => it.w + it.d - 0.7, tags: "bar hjørne", draw: (w, d) => `<path d="M${-w / 2},${-d / 2} H${w / 2} V${d / 2} H${w / 2 - 0.7} V${-d / 2 + 0.7} H${-w / 2} Z" class="it-bar"/>` + `<path d="M${-w / 2 + 0.05},${-d / 2 + 0.05} H${w / 2 - 0.05} V${d / 2 - 0.05} H${w / 2 - 0.5}" class="it-line"/>` },
+  bar_u: { n: "Bardisk, buet (U)", g: "bar", w: 4.2, d: 2.6, h: 1.1, bar: it => 2 * Math.max(0, it.w - it.d / 2) + Math.PI * it.d / 2, tags: "bar rund oval buet", draw: (w, d) => `<path d="${stadium(Math.max(w, d / 2 + 0.2), d, Math.min(0.68, d / 2 - 0.05))}" class="it-bar"/>` },
+  bar_island: { n: "Bar-øy, rund", g: "bar", w: 3.0, d: 3.0, h: 1.1, bar: it => Math.PI * it.w, tags: "bar sirkel øy", draw: (w, d) => { const r = Math.min(w, d) / 2; return C(0, 0, r, "it-bar") + C(0, 0, r - 0.68, "it-bartop") + C(0, 0, r - 0.68, "it-line") + R(-0.35, r - 0.72, 0.7, 0.1, "it-bartop"); } },
+  backbar: { n: "Bakbar / hyller", g: "bar", w: 2.5, d: 0.6, h: 2.1, tags: "bakbar hylle flasker", draw: (w, d) => { let s = R(-w / 2, -d / 2, w, d, "it-bar", 0.02); for (let x = -w / 2 + 0.3; x < w / 2 - 0.05; x += 0.3) s += L(x, -d / 2 + 0.06, x, d / 2 - 0.06); return s; } },
+  popup: { n: "Pop-up matdisk", g: "bar", w: 2.1, d: 0.7, h: 0.95, bar: it => it.w, tags: "mat pop-up kjøkken disk gjestekjøkken", draw: (w, d) => R(-w / 2, -d / 2, w, d, "it-bar", 0.03) + R(-w / 2 + 0.06, -d / 2 + 0.06, w - 0.12, d - 0.26, "it-bartop") + T(0, -0.05, "POP-UP", Math.min(0.18, d * 0.3), "it-text", 'style="letter-spacing:.02em"') },
+  sign: { n: "Skilt / lysskilt", g: "bar", w: 2.0, d: 0.12, h: 0.5, z0: 1.9, tags: "skilt lys logo pop-up", draw: (w, d) => R(-w / 2, -d / 2, w, d, "it-ink") + `<line x1="${-w / 2}" y1="${d / 2 + 0.05}" x2="${w / 2}" y2="${d / 2 + 0.05}" style="stroke:var(--accent);stroke-width:2;stroke-dasharray:3 3"/>` },
+  service: { n: "Servicestasjon", g: "bar", w: 1.0, d: 0.5, h: 0.95, tags: "servering stasjon bestikk", draw: (w, d) => R(-w / 2, -d / 2, w, d, "it-equip", 0.02) + L(-w / 2 + 0.1, 0, w / 2 - 0.1, 0) },
+  // ---- Bord og sitteplasser
+  set2: { n: "Bord for 2", g: "seat", w: 0.7, d: 1.55, h: 0.75, seats: () => 2, tags: "bord stoler 2 par", draw: (w, d) => R(-0.35, -0.35, 0.7, 0.7, "it-table", 0.03) + chairSVG(0, -d / 2 + 0.24, 0.44, 0.46, 0) + chairSVG(0, d / 2 - 0.24, 0.44, 0.46, 180) },
+  set4: { n: "Bord for 4", g: "seat", w: 1.2, d: 1.75, h: 0.75, seats: () => 4, tags: "bord stoler 4 familie", draw: (w, d) => R(-0.6, -0.4, 1.2, 0.8, "it-table", 0.03) + chairSVG(-0.3, -d / 2 + 0.23, 0.44, 0.46, 0) + chairSVG(0.3, -d / 2 + 0.23, 0.44, 0.46, 0) + chairSVG(-0.3, d / 2 - 0.23, 0.44, 0.46, 180) + chairSVG(0.3, d / 2 - 0.23, 0.44, 0.46, 180) },
+  set6: { n: "Langbord for 6", g: "seat", w: 1.8, d: 1.75, h: 0.75, seats: () => 6, tags: "langbord 6 selskap", draw: (w, d) => R(-0.9, -0.4, 1.8, 0.8, "it-table", 0.03) + [-0.6, 0, 0.6].map(x => chairSVG(x, -d / 2 + 0.23, 0.44, 0.46, 0) + chairSVG(x, d / 2 - 0.23, 0.44, 0.46, 180)).join("") },
+  highset: { n: "Ståbord med 3 krakker", g: "seat", w: 1.3, d: 1.3, h: 1.1, seats: () => 3, tags: "ståbord barkrakk høyt", draw: (w, d) => C(0, 0, 0.3, "it-table") + [0, 120, 240].map(a => { const [x, y] = rotPt(0, -0.48, a); return C(x, y, 0.17, "it-seat"); }).join("") },
+  booth: { n: "Bås (benker og bord)", g: "seat", w: 1.9, d: 1.6, h: 1.1, seats: it => 2 * Math.max(1, Math.floor(it.w / 0.6)), tags: "bås benk sofa", draw: (w, d) => R(-w / 2, -d / 2, w, 0.5, "it-seat", 0.04) + R(-w / 2, -d / 2, w, 0.14, "it-seat") + R(-w / 2, d / 2 - 0.5, w, 0.5, "it-seat", 0.04) + R(-w / 2, d / 2 - 0.14, w, 0.14, "it-seat") + R(-w / 2 + 0.1, -d / 2 + 0.55, w - 0.2, Math.max(0.2, d - 1.1), "it-table", 0.03) },
+  table_round: { n: "Rundt bord Ø70", g: "seat", w: 0.7, d: 0.7, h: 0.75, round: true, tags: "bord rundt", draw: (w, d) => C(0, 0, Math.min(w, d) / 2, "it-table") },
+  table_sq: { n: "Bord 70 × 70", g: "seat", w: 0.7, d: 0.7, h: 0.75, tags: "bord firkant", draw: (w, d) => R(-w / 2, -d / 2, w, d, "it-table", 0.03) },
+  table_rect: { n: "Bord 120 × 80", g: "seat", w: 1.2, d: 0.8, h: 0.75, tags: "bord rektangel", draw: (w, d) => R(-w / 2, -d / 2, w, d, "it-table", 0.03) },
+  table_oval: { n: "Ovalt bord", g: "seat", w: 1.1, d: 0.7, h: 0.75, tags: "bord oval", draw: (w, d) => `<ellipse rx="${w / 2}" ry="${d / 2}" class="it-table"/>` },
+  table_high: { n: "Ståbord Ø60", g: "seat", w: 0.6, d: 0.6, h: 1.1, round: true, tags: "ståbord høyt", draw: (w, d) => C(0, 0, Math.min(w, d) / 2, "it-table") + C(0, 0, Math.min(w, d) / 5, "it-line") },
+  chair: { n: "Stol", g: "seat", w: 0.46, d: 0.5, h: 0.85, seats: () => 1, tags: "stol", draw: (w, d) => chairSVG(0, 0, w, d, 0) },
+  stool: { n: "Barkrakk", g: "seat", w: 0.4, d: 0.4, h: 0.78, round: true, seats: () => 1, tags: "krakk barkrakk", draw: (w, d) => C(0, 0, w / 2, "it-seat") + C(0, 0, w / 2 - 0.07, "it-line") },
+  armchair: { n: "Lenestol", g: "seat", w: 0.62, d: 0.62, h: 0.8, seats: () => 1, tags: "lenestol lounge", draw: (w, d) => R(-w / 2, -d / 2, w, d, "it-seat", 0.08) + R(-w / 2, -d / 2, w, 0.16, "it-seat", 0.06) + R(-w / 2, -d / 2, 0.11, d, "it-seat", 0.05) + R(w / 2 - 0.11, -d / 2, 0.11, d, "it-seat", 0.05) },
+  sofa: { n: "Sofa", g: "seat", w: 2.0, d: 0.85, h: 0.8, seats: it => Math.max(1, Math.floor(it.w / 0.65)), tags: "sofa lounge", draw: (w, d) => { let s = R(-w / 2, -d / 2, w, d, "it-seat", 0.08) + R(-w / 2, -d / 2, w, 0.2, "it-seat", 0.06) + R(-w / 2, -d / 2, 0.15, d, "it-seat", 0.06) + R(w / 2 - 0.15, -d / 2, 0.15, d, "it-seat", 0.06); const n = Math.max(1, Math.floor(w / 0.65)); for (let i = 1; i < n; i++) { const x = -w / 2 + 0.15 + (w - 0.3) * i / n; s += L(x, -d / 2 + 0.22, x, d / 2 - 0.03); } return s; } },
+  banquette: { n: "Fastmontert benk", g: "seat", w: 2.4, d: 0.6, h: 1.0, seats: it => Math.max(1, Math.floor(it.w / 0.6)), tags: "benk banquette vegg", draw: (w, d) => { let s = R(-w / 2, -d / 2, w, d, "it-seat", 0.03) + R(-w / 2, -d / 2, w, 0.15, "it-seat"); const n = Math.max(1, Math.floor(w / 0.6)); for (let i = 1; i < n; i++) { const x = -w / 2 + w * i / n; s += L(x, -d / 2 + 0.17, x, d / 2 - 0.03); } return s; } },
+  // ---- Scene
+  stage: { n: "Scene", g: "show", w: 3.0, d: 2.0, h: 0.4, podium: true, tags: "scene podium konsert band", draw: (w, d) => `<rect x="${-w / 2}" y="${-d / 2}" width="${w}" height="${d}" style="fill:url(#hatch-stage)" class="it-stage"/>` },
+  dj: { n: "DJ-pult", g: "show", w: 1.6, d: 0.65, h: 1.05, tags: "dj musikk", draw: (w, d) => R(-w / 2, -d / 2, w, d, "it-stage", 0.03) + C(-w / 4, 0, Math.min(0.16, d / 3), "it-line") + C(w / 4, 0, Math.min(0.16, d / 3), "it-line") },
+  dance: { n: "Dansegulv", g: "show", w: 4.0, d: 3.5, h: 0.01, zone: true, label: "Dansegulv", tags: "dans gulv sone", draw: (w, d) => R(-w / 2, -d / 2, w, d, "it-zone", 0.05) },
+  speaker: { n: "Høyttaler", g: "show", w: 0.5, d: 0.45, h: 1.1, tags: "lyd høyttaler", draw: (w, d) => R(-w / 2, -d / 2, w, d, "it-ink", 0.03) + C(0, 0.02, Math.min(w, d) / 3.2, "it-line") },
+  screen: { n: "Storskjerm", g: "show", w: 2.0, d: 0.12, h: 1.2, z0: 1.4, tags: "tv skjerm sport", draw: (w, d) => R(-w / 2, -d / 2, w, d, "it-ink") },
+  // ---- Utstyr
+  fridge: { n: "Kjøleskap, glassdør", g: "equip", w: 0.6, d: 0.65, h: 1.9, tags: "kjøl kjøleskap", draw: (w, d) => R(-w / 2, -d / 2, w, d, "it-equip", 0.02) + R(-w / 2 + 0.07, -d / 2 + 0.07, w - 0.14, d - 0.2, "it-line") },
+  undercounter: { n: "Benkekjøl", g: "equip", w: 0.9, d: 0.6, h: 0.85, tags: "kjøl benk", draw: (w, d) => R(-w / 2, -d / 2, w, d, "it-equip", 0.02) + L(0, -d / 2 + 0.05, 0, d / 2 - 0.05) },
+  dishwasher: { n: "Glassvasker", g: "equip", w: 0.6, d: 0.6, h: 0.85, tags: "oppvask vask glass", draw: (w, d) => R(-w / 2, -d / 2, w, d, "it-equip", 0.02) + C(0, 0, Math.min(w, d) / 3.2, "it-line") },
+  icewell: { n: "Cocktailstasjon", g: "equip", w: 1.2, d: 0.6, h: 0.9, tags: "is cocktail stasjon", draw: (w, d) => R(-w / 2, -d / 2, w, d, "it-equip", 0.02) + R(-w / 2 + 0.1, -d / 2 + 0.1, w * 0.45, d - 0.2, "it-line") + R(0.05, -d / 2 + 0.1, w / 2 - 0.15, d - 0.2, "it-line") },
+  sinkunit: { n: "Vask / arbeidsbenk", g: "equip", w: 1.2, d: 0.65, h: 0.9, tags: "vask benk", draw: (w, d) => R(-w / 2, -d / 2, w, d, "it-equip", 0.02) + `<ellipse cx="${-w / 4}" cy="0" rx="${w / 6}" ry="${d / 4}" class="it-line"/>` },
+  coffee: { n: "Kaffemaskin", g: "equip", w: 0.8, d: 0.55, h: 0.5, z0: 0.95, tags: "kaffe espresso", draw: (w, d) => R(-w / 2, -d / 2, w, d, "it-ink", 0.04) + C(-w / 5, 0, 0.06, "it-line") + C(w / 5, 0, 0.06, "it-line") },
+  register: { n: "Kasse", g: "equip", w: 0.4, d: 0.4, h: 0.3, z0: 1.1, tags: "kasse betaling", draw: (w, d) => R(-w / 2, -d / 2, w, d, "it-ink", 0.03) },
+  coat: { n: "Garderobe", g: "equip", w: 1.6, d: 0.6, h: 1.8, tags: "garderobe jakke", draw: (w, d) => { let s = R(-w / 2, -d / 2, w, d, "it-fix", 0.02) + L(-w / 2 + 0.05, 0, w / 2 - 0.05, 0); for (let x = -w / 2 + 0.2; x < w / 2; x += 0.2) s += L(x, -0.1, x + 0.06, 0.1); return s; } },
+  // ---- Bygg og soner
+  column: { n: "Søyle", g: "build", w: 0.35, d: 0.35, h: 2.45, round: true, struct: true, tags: "søyle bærende", draw: (w, d) => C(0, 0, Math.min(w, d) / 2, "it-ink") },
+  pier: { n: "Pilaster", g: null, w: 0.8, d: 0.36, h: 2.65, struct: true, draw: (w, d) => R(-w / 2, -d / 2, w, d, "it-ink") },
+  podium: { n: "Podium / nivå", g: "build", w: 2.4, d: 2.0, h: 0.2, podium: true, tags: "podium nivå opphøyd", draw: (w, d) => R(-w / 2, -d / 2, w, d, "pl-level") },
+  steps: { n: "Trinn", g: "build", w: 0.9, d: 1.4, h: 0.4, steps: 3, stair: true, tags: "trinn trapp", draw: (w, d, it) => stairSVG(w, d, (it && it.steps) || 3) },
+  stair: { n: "Trapp", g: "build", w: 3.4, d: 1.1, h: 2.65, steps: 12, stair: true, tags: "trapp", draw: (w, d, it) => stairSVG(w, d, (it && it.steps) || 12) },
+  rail: { n: "Rekkverk", g: "build", w: 2.0, d: 0.05, h: 1.0, tags: "rekkverk gelender", draw: (w, d) => R(-w / 2, -0.025, w, 0.05, "it-ink") },
+  partition: { n: "Lav skillevegg", g: "build", w: 1.6, d: 0.12, h: 1.3, tags: "skillevegg halvvegg skjerm", draw: (w, d) => R(-w / 2, -d / 2, w, d, "it-ink", 0.01) },
+  planter: { n: "Plantekasse", g: "build", w: 1.4, d: 0.4, h: 0.9, tags: "plante kasse grønt skillevegg", draw: (w, d) => { let s = R(-w / 2, -d / 2, w, d, "it-plant", 0.03); for (let x = -w / 2 + 0.2; x < w / 2 - 0.1; x += 0.3) s += C(x, 0, Math.min(0.12, d / 2.6), "it-line"); return s; } },
+  zone: { n: "Sone med navn", g: "build", w: 3.0, d: 2.0, h: 0.01, zone: true, label: "Ny sone", tags: "sone område markering", draw: (w, d) => R(-w / 2, -d / 2, w, d, "it-zone", 0.05) },
+  // ---- Annet
+  plant: { n: "Plante", g: "other", w: 0.5, d: 0.5, h: 1.2, round: true, tags: "plante grønn", draw: (w, d) => { const r = Math.min(w, d) / 2; let s = C(0, 0, r, "it-plant"); for (let a = 0; a < 360; a += 60) { const [x, y] = rotPt(0, -r * 0.8, a); s += L(0, 0, x, y); } return s; } },
+  note: { n: "Notat på tegningen", g: "other", w: 1.6, d: 0.4, h: 0, note: true, label: "Skriv et notat", tags: "notat tekst kommentar", draw: (w, d) => "" },
+  toilet: { n: "Toalett", g: null, w: 0.4, d: 0.62, h: 0.8, fixt: true, draw: (w, d) => R(-w / 2, -d / 2, w, 0.18, "it-fix", 0.03) + `<ellipse cx="0" cy="${0.1}" rx="${w / 2 - 0.02}" ry="${d / 2 - 0.12}" class="it-fix"/>` },
+  urinal: { n: "Urinal", g: null, w: 0.35, d: 0.3, h: 0.6, fixt: true, draw: (w, d) => `<path d="M${-w / 2},${-d / 2} H${w / 2} V0 A${w / 2},${d / 2} 0 0 1 ${-w / 2},0 Z" class="it-fix"/>` },
+  basin: { n: "Servant / vask", g: null, w: 0.55, d: 0.45, h: 0.85, fixt: true, draw: (w, d) => R(-w / 2, -d / 2, w, d, "it-fix", 0.04) + `<ellipse rx="${w / 3}" ry="${d / 3.3}" cy="0.02" class="it-line"/>` },
+};
+Object.entries(CAT).forEach(([k, c]) => c.k = k);
+const SWATCHES = [null, "#C79B6B", "#9A7390", "#C8567E", "#D9A6B5", "#7E5A74", "#8FA58C", "#5D6E7E", "#2B2630", "#E9E2D6", "#B8B3AD"];
+const kindOf = it => CAT[it.kind] || CAT.table_sq;
+const seatsOf = it => (it.st === "demo" ? 0 : (kindOf(it).seats ? kindOf(it).seats(it) : 0));
+const barOf = it => (it.st === "demo" || !kindOf(it).bar ? 0 : kindOf(it).bar(it));
+const isFurniture = it => { const c = kindOf(it); return !(c.struct || c.fixt || c.stair || it.kind === "rail" || it.kind === "pier"); };
+const isLoose = it => isFurniture(it) && !it.fixed && !c_isBar(it);
+const c_isBar = it => ["bar_straight", "bar_l", "bar_u", "bar_island", "backbar", "popup"].includes(it.kind);
+
+/* ===================== State ===================== */
+function baseState() { return { v: 1, walls: clone(BASE.walls), items: clone(BASE.items), levels: clone(BASE.levels) }; }
+let S = baseState();
+let meta = { id: null, name: "Dagens lokale", note: "", by: null };
+const hist = { past: [], future: [] };
+function commit(label) {
+  hist.past.push(JSON.stringify(S)); if (hist.past.length > 120) hist.past.shift(); hist.future = [];
+  dirty = true; saveDraftSoon(); updateUndo();
+}
+function snapshotBefore() { return JSON.stringify(S); }
+function pushPast(json) { hist.past.push(json); if (hist.past.length > 120) hist.past.shift(); hist.future = []; dirty = true; saveDraftSoon(); updateUndo(); }
+function undo() { if (!hist.past.length) return; hist.future.push(JSON.stringify(S)); S = JSON.parse(hist.past.pop()); sel = sel.filter(id => findAny(id)); afterChange(); toast("Angret"); }
+function redo() { if (!hist.future.length) return; hist.past.push(JSON.stringify(S)); S = JSON.parse(hist.future.pop()); sel = sel.filter(id => findAny(id)); afterChange(); }
+function updateUndo() { $("#undo").disabled = !hist.past.length; $("#redo").disabled = !hist.future.length; }
+let dirty = false;
+function findItem(id) { return S.items.find(i => i.id === id); }
+function findWall(id) { return S.walls.find(w => w.id === id); }
+function findLevel(id) { return S.levels.find(l => l.id === id); }
+function findAny(id) { return findItem(id) || findWall(id) || findLevel(id); }
+function typeOf(id) { return findItem(id) ? "item" : findWall(id) ? "wall" : findLevel(id) ? "level" : null; }
+
+/* local draft (per viewer convenience) */
+const LS = { get(k) { try { return localStorage.getItem(k); } catch { return null; } }, set(k, v) { try { localStorage.setItem(k, v); } catch { } }, del(k) { try { localStorage.removeItem(k); } catch { } } };
+let draftT = 0;
+function saveDraftSoon() { clearTimeout(draftT); draftT = setTimeout(() => LS.set("barmuda.draft", JSON.stringify({ S, meta, t: Date.now() })), 600); }
+function loadDraft() { const raw = LS.get("barmuda.draft"); if (!raw) return false; try { const d = JSON.parse(raw); const p = d && sanitizePlan(d.S); if (p) { S = p; meta = Object.assign(meta, d.meta || {}); return true; } } catch { } return false; }
+
+
+/* ----- validation of plans coming from files, drafts or the shared store ----- */
+const okId = v => typeof v === "string" && /^[A-Za-z0-9_.:-]{1,60}$/.test(v);
+const okNum = (v, lo = -200, hi = 200) => typeof v === "number" && Number.isFinite(v) && v >= lo && v <= hi;
+const okPt = p => Array.isArray(p) && p.length === 2 && okNum(p[0]) && okNum(p[1]);
+const okStr = (v, n) => (typeof v === "string" ? v.slice(0, n) : undefined);
+function sanitizePlan(pl) {
+  if (!pl || !Array.isArray(pl.walls) || !Array.isArray(pl.items) || pl.walls.length > 2000 || pl.items.length > 3000) return null;
+  const st = v => (["ex", "new", "demo"].includes(v) ? v : "new");
+  const walls = pl.walls.filter(w => w && okId(w.id) && okPt(w.a) && okPt(w.b) && (w.f === 0 || w.f === 1)).map(w => ({
+    id: w.id, f: w.f, a: w.a.slice(), b: w.b.slice(), t: okNum(w.t, 0.01, 1.5) ? w.t : 0.1, h: okNum(w.h, 0.1, 8) ? w.h : 2.45, ext: !!w.ext, st: st(w.st),
+    ops: (Array.isArray(w.ops) ? w.ops : []).filter(o => o && okId(o.id) && ["door", "double", "window", "opening"].includes(o.type) && okNum(o.at, -1, 100) && okNum(o.w, 0.05, 30)).slice(0, 40).map(o => ({ id: o.id, type: o.type, at: o.at, w: o.w, h: okNum(o.h, 0.1, 6) ? o.h : 2.1, sill: okNum(o.sill, 0, 4) ? o.sill : 0, flip: okNum(o.flip, 0, 3) ? Math.round(o.flip) : 0 })),
+    note: okStr(w.note, 300), memo: okStr(w.memo, 1000), lock: !!w.lock, from: okId(w.from) ? w.from : undefined,
+  }));
+  const items = pl.items.filter(it => it && okId(it.id) && (CAT[it.kind] || it.kind === "dim") && (it.f === 0 || it.f === 1)).map(it => {
+    const o = { id: it.id, kind: it.kind, f: it.f, st: st(it.st), x: okNum(it.x) ? it.x : 0, y: okNum(it.y) ? it.y : 0, w: okNum(it.w, 0, 40) ? it.w : 1, d: okNum(it.d, 0, 40) ? it.d : 1, h: okNum(it.h, 0, 10) ? it.h : 0.8, rot: okNum(it.rot, -720, 720) ? it.rot : 0 };
+    if (it.kind === "dim") { if (!okPt(it.a) || !okPt(it.b)) return null; o.a = it.a.slice(); o.b = it.b.slice(); }
+    ["name", "label"].forEach(k => { if (typeof it[k] === "string") o[k] = it[k].slice(0, 80); });
+    ["note", "memo"].forEach(k => { if (typeof it[k] === "string") o[k] = it[k].slice(0, 1000); });
+    if (typeof it.color === "string" && /^#[0-9a-f]{6}$/i.test(it.color)) o.color = it.color;
+    ["z0", "z1"].forEach(k => { if (okNum(it[k], -5, 10)) o[k] = it[k]; });
+    if (okNum(it.steps, 1, 40)) o.steps = Math.round(it.steps);
+    ["fixed", "lock", "both"].forEach(k => { if (it[k]) o[k] = true; });
+    return o;
+  }).filter(Boolean);
+  const levels = (Array.isArray(pl.levels) ? pl.levels : clone(BASE.levels)).filter(l => l && okId(l.id) && Array.isArray(l.poly) && l.poly.length >= 3 && l.poly.length < 200 && l.poly.every(okPt)).map(l => ({ id: l.id, f: l.f === 1 ? 1 : 0, name: okStr(l.name, 80) || "Nivå", z: okNum(l.z, 0, 3) ? l.z : 0.2, st: st(l.st), poly: l.poly.map(p => p.slice()), note: okStr(l.note, 300), memo: okStr(l.memo, 1000) }));
+  return { v: 1, walls, items, levels };
+}
+
+/* ===================== View ===================== */
+let floor = 0, view = "plan", tool = "select";
+let sel = [];           // selected ids
+let selOp = null;       // {wall, op}
+let hover = null;
+let place = null;       // {kind} armed library item
+const V = { k: 60, tx: 0, ty: 0 };
+const opts = { existing: true, demo: true, dims: false, ghost: true, snap: true };
+const svg = $("#plan");
+const stage = $("#stage");
+function toWorld(cx, cy) { const r = svg.getBoundingClientRect(); return [(cx - r.left - V.tx) / V.k, (cy - r.top - V.ty) / V.k]; }
+function floorBounds(f) {
+  let pts = [];
+  S.walls.filter(w => w.f === f).forEach(w => pts.push(w.a, w.b));
+  if (f === 0 && BASE.patio) pts = pts.concat(BASE.patio.slice(0, 2));
+  const xs = pts.map(p => p[0]), ys = pts.map(p => p[1]);
+  return { x0: Math.min(...xs), y0: Math.min(...ys), x1: Math.max(...xs), y1: Math.max(...ys) };
+}
+function fit(f = floor) {
+  const b = floorBounds(f); const r = svg.getBoundingClientRect(); if (!r.width) return;
+  const bx1 = f === 0 ? Math.min(b.x1, 15.2) : b.x1;
+  const pad = r.width < 600 ? 18 : 48;
+  V.k = Math.min((r.width - pad * 2) / (bx1 - b.x0), (r.height - pad * 2) / (b.y1 - b.y0));
+  V.tx = (r.width - (bx1 - b.x0) * V.k) / 2 - b.x0 * V.k; V.ty = (r.height - (b.y1 - b.y0) * V.k) / 2 - b.y0 * V.k;
+  render();
+}
+function zoomAt(f, cx, cy) { const r = svg.getBoundingClientRect(); const px = cx - r.left, py = cy - r.top; const nk = clamp(V.k * f, 12, 600); V.tx = px - (px - V.tx) * nk / V.k; V.ty = py - (py - V.ty) * nk / V.k; V.k = nk; render(); }
+
+/* ===================== Plan rendering ===================== */
+const NS = "http://www.w3.org/2000/svg";
+function wallJoinExt(w, walls) {
+  const res = [0, 0];
+  [w.a, w.b].forEach((p, i) => {
+    for (const o of walls) {
+      if (o === w || o.st === "demo") continue;
+      if (dist(p, o.a) < 0.06 || dist(p, o.b) < 0.06) { res[i] = Math.max(res[i], o.t / 2); continue; }
+      const pr = projSeg(p, o.a, o.b); if (pr.d < 0.06 && pr.t > 0 && pr.t < 1) res[i] = Math.max(res[i], o.t / 2);
+    }
+  });
+  return res;
+}
+function wallGeom(w) { const L = dist(w.a, w.b) || 1e-6; const u = [(w.b[0] - w.a[0]) / L, (w.b[1] - w.a[1]) / L]; const n = [-u[1], u[0]]; return { L, u, n }; }
+function wallPieces(w, ext = [0, 0]) {
+  const { L, u, n } = wallGeom(w); const h = w.t / 2;
+  const cuts = (w.ops || []).map(o => [o.at - o.w / 2, o.at + o.w / 2]).sort((a, b) => a[0] - b[0]);
+  const spans = []; let s = -ext[0];
+  cuts.forEach(([c0, c1]) => { if (c0 > s) spans.push([s, c0]); s = Math.max(s, c1); });
+  if (L + ext[1] > s) spans.push([s, L + ext[1]]);
+  return spans.map(([s0, s1]) => { const p = t => [w.a[0] + u[0] * t, w.a[1] + u[1] * t]; const A = p(s0), B = p(s1); return [[A[0] + n[0] * h, A[1] + n[1] * h], [B[0] + n[0] * h, B[1] + n[1] * h], [B[0] - n[0] * h, B[1] - n[1] * h], [A[0] - n[0] * h, A[1] - n[1] * h]]; });
+}
+const ptsStr = poly => poly.map(p => p[0].toFixed(3) + "," + p[1].toFixed(3)).join(" ");
+function openingSVG(w, o, cls = "pl-door") {
+  const { u, n } = wallGeom(w); const h = w.t / 2; const c = [w.a[0] + u[0] * o.at, w.a[1] + u[1] * o.at];
+  const P = (t, s) => [c[0] + u[0] * t + n[0] * s, c[1] + u[1] * t + n[1] * s];
+  const f = o.flip || 0, side = (f & 2) ? -1 : 1, hingeEnd = (f & 1) ? 1 : -1;
+  let s = "";
+  if (o.type === "window") {
+    const A = P(-o.w / 2, h), B = P(o.w / 2, h), C2 = P(o.w / 2, -h), D = P(-o.w / 2, -h);
+    s += `<polygon points="${ptsStr([A, B, C2, D])}" class="pl-win"/>`;
+    s += `<line x1="${P(-o.w / 2, 0)[0]}" y1="${P(-o.w / 2, 0)[1]}" x2="${P(o.w / 2, 0)[0]}" y2="${P(o.w / 2, 0)[1]}" class="pl-win"/>`;
+  } else if (o.type === "opening") {
+    const A = P(-o.w / 2, 0), B = P(o.w / 2, 0);
+    s += `<line x1="${A[0]}" y1="${A[1]}" x2="${B[0]}" y2="${B[1]}" class="pl-door" style="stroke-dasharray:4 3"/>`;
+  } else {
+    const leaves = o.type === "double" ? [[-o.w / 2, o.w / 2, 1], [o.w / 2, o.w / 2, -1]] : [[hingeEnd * o.w / 2, o.w, -hingeEnd]];
+    leaves.forEach(([hx, lw, dir]) => {
+      const H = P(hx, side * h), E = P(hx, side * (h + lw)), F = P(hx + dir * lw, side * h);
+      const sweep = ((dir * side) > 0) ? 0 : 1;
+      s += `<line x1="${H[0]}" y1="${H[1]}" x2="${E[0]}" y2="${E[1]}" class="pl-door" style="stroke-width:1.6"/>`;
+      s += `<path d="M${E[0]},${E[1]} A${lw},${lw} 0 0 ${detSweep(u, n, dir, side)} ${F[0]},${F[1]}" class="pl-door" style="stroke-dasharray:3 3"/>`;
+    });
+  }
+  return s;
+}
+function detSweep(u, n, dir, side) { // cross product sign decides arc direction
+  const cross = (n[0] * side) * (u[1] * dir) - (n[1] * side) * (u[0] * dir);
+  return cross > 0 ? 1 : 0;
+}
+function itemBaseZ(it) {
+  const c = kindOf(it);
+  if (c.stair || it.kind === "rail") return it.z0 || 0;
+  if (it.f !== 0) return 0;
+  let z = 0;
+  S.levels.forEach(l => { if (l.f === 0 && l.st !== "demo" && inPoly([it.x, it.y], l.poly)) z = Math.max(z, l.z); });
+  S.items.forEach(p => { if (p !== it && p.f === it.f && p.st !== "demo" && kindOf(p).podium && inPoly([it.x, it.y], corners(p))) z = Math.max(z, itemBaseZ(p) + p.h); });
+  return z;
+}
+function itemSVG(it, extraCls = "") {
+  const c = kindOf(it);
+  const col = it.color ? ` style="--f-seat:${it.color};--f-bar:${it.color};--f-table:${it.color};--f-equip:${it.color};--f-stage:${it.color};--f-plant:${it.color}"` : "";
+  let inner = c.draw(it.w, it.d, it);
+  if (c.zone) { const tx = it.label || c.label || c.n; inner += T(0, 0, tx, Math.max(0.1, Math.min(0.32, it.d / 5, it.w / (tx.length * 0.62 + 0.4))), "it-text", 'style="fill:var(--accent)"'); }
+  if (c.note) {
+    const txt = it.label || c.label; const fs = 0.2; const wd = Math.max(0.6, txt.length * fs * 0.52 + 0.3);
+    inner = `<rect x="${-wd / 2}" y="-0.2" width="${wd}" height="0.4" rx="0.08" class="it-notebg"/>` + T(0, 0, txt, fs, "it-text");
+  }
+  if (c.podium) inner += T(0, 0, (it.kind === "stage" ? "Scene " : "") + "+" + fmt(it.h, 2).replace(/0$/, "") + " m", Math.max(0.14, Math.min(0.24, it.d / 6)), "pl-label");
+  const cls = `plan-item ${it.st === "demo" ? "is-demo demo-item" : ""} ${extraCls}`;
+  return `<g class="${cls}" data-t="item" data-id="${it.id}" transform="translate(${it.x.toFixed(3)},${it.y.toFixed(3)}) rotate(${(it.rot || 0).toFixed(2)})"${col}>${inner}<rect x="${-it.w / 2}" y="${-Math.max(it.d, 0.1) / 2}" width="${it.w}" height="${Math.max(it.d, 0.1)}" class="pl-hit"/></g>`;
+}
+function renderDefs() {
+  return `<defs>
+  <pattern id="gridp" patternUnits="userSpaceOnUse" width="1" height="1"><path d="M1 0H0V1" style="fill:none;stroke:var(--grid-major);stroke-width:${1.2 / V.k}"/><path d="M0.5 0V1M0 0.5H1" style="fill:none;stroke:var(--grid);stroke-width:${1 / V.k}"/></pattern>
+  <pattern id="hatch-demo" patternUnits="userSpaceOnUse" width="0.14" height="0.14" patternTransform="rotate(45)"><rect width="0.14" height="0.14" style="fill:var(--paper)"/><line x1="0" y1="0" x2="0" y2="0.14" style="stroke:var(--wall-demo);stroke-width:0.035"/></pattern>
+  <pattern id="hatch-void" patternUnits="userSpaceOnUse" width="0.3" height="0.3" patternTransform="rotate(-45)"><line x1="0" y1="0" x2="0" y2="0.3" style="stroke:var(--ink-3);stroke-width:${1 / V.k}"/></pattern>
+  <pattern id="hatch-stage" patternUnits="userSpaceOnUse" width="0.2" height="0.2" patternTransform="rotate(45)"><rect width="0.2" height="0.2" style="fill:var(--f-stage)"/><line x1="0" y1="0" x2="0" y2="0.2" style="stroke:var(--paper);stroke-opacity:.35;stroke-width:0.03"/></pattern>
+  </defs>`;
+}
+function roomLabel(x, y, name, sub, k) {
+  const fs = clamp(11 / k, 0.12, 0.5);
+  return `<text x="${x}" y="${y}" font-size="${fs}" text-anchor="middle" class="pl-room">${esc(name.toUpperCase())}</text>` + (sub ? `<text x="${x}" y="${y + fs * 1.35}" font-size="${fs * 0.95}" text-anchor="middle" class="pl-label" style="font-family:var(--font-num)">${esc(sub)}</text>` : "");
+}
+const ROOM_LABELS = { r1: [7.8, 4.05], r2: [2.9, 9.55], r3: [5.0, 3.1], r4: [5.3, 8.1] };
+function planSVG(f, forExport = false) {
+  const k = V.k; let s = "";
+  const walls = S.walls.filter(w => w.f === f);
+  // floor fills
+  if (f === 0) {
+    s += `<polygon points="${ptsStr(BASE.patio)}" class="pl-patio" style="stroke-width:1"/>`;
+    const pc = [15.2, 5.2]; s += roomLabel(pc[0], pc[1], "Uteservering", "terrasse · ca. 78 m²", k);
+    BASE.rooms.filter(r => r.f === 0 && r.poly.length).forEach(r => s += `<polygon points="${ptsStr(r.poly)}" class="pl-floor"/>`);
+  } else {
+    if (opts.ghost) {
+      BASE.rooms.filter(r => r.f === 0 && r.poly.length).forEach(r => s += `<polygon points="${ptsStr(r.poly)}" class="pl-floor" style="opacity:.55"/>`);
+    }
+    s += `<polygon points="${ptsStr(BASE.slab)}" class="pl-floor2"/>`;
+    s += `<polygon points="${ptsStr(BASE.void)}" class="pl-void"/>`;
+    s += `<polygon points="${ptsStr(BASE.shaft)}" class="it-ink" style="opacity:.85"/>`;
+  }
+  // levels
+  S.levels.filter(l => l.f === f && (l.st !== "demo" || opts.demo)).forEach(l => {
+    const demo = l.st === "demo"; const selc = sel.includes(l.id);
+    s += `<g data-t="level" data-id="${l.id}"><polygon points="${ptsStr(l.poly)}" class="pl-level" style="${demo ? "fill:url(#hatch-demo);stroke:var(--wall-demo);stroke-dasharray:5 4;" : ""}stroke-width:1;${selc ? "stroke:var(--sel);stroke-width:" + 2 / k : ""}"/></g>`;
+    const c = l.lp || centroid(l.poly);
+    s += `<text x="${c[0]}" y="${c[1]}" font-size="${clamp(11 / k, 0.12, 0.4)}" text-anchor="middle" class="pl-label" style="font-family:var(--font-num);pointer-events:none">${demo ? "revet · " : ""}+${fmt(l.z)} m</text>`;
+  });
+  // ghost walls of other floor
+  if (f === 1 && opts.ghost) S.walls.filter(w => w.f === 0 && w.st !== "demo").forEach(w => wallPieces(w, wallJoinExt(w, S.walls.filter(x => x.f === 0))).forEach(p => s += `<polygon points="${ptsStr(p)}" class="pl-wall ghost"/>`));
+  if (f === 0) { s += `<polyline points="${ptsStr(BASE.mezzEdge)}" class="pl-edge" style="stroke-width:1.2"/>`; const m = BASE.mezzEdge[20]; s += `<text x="${m[0] - 0.12}" y="${m[1]}" font-size="${clamp(10 / k, 0.1, 0.3)}" text-anchor="end" class="pl-label" style="font-style:italic">mesaninkant over</text>`; }
+  // room labels
+  BASE.rooms.filter(r => r.f === f && ROOM_LABELS[r.id]).forEach(r => { const [x, y] = ROOM_LABELS[r.id]; s += roomLabel(x, y, r.name, r.id === "r1" ? `${r.dims} · ${fmt(r.area, 1)} m²` : r.area ? `${fmt(r.area, 1)} m²` : r.dims, k); });
+  if (f === 1) { s += roomLabel(10.6, 6.2, "Åpent ned", "dobbel takhøyde", k); s += `<text x="3.15" y="3.4" font-size="${clamp(10 / k, 0.1, 0.3)}" text-anchor="middle" dominant-baseline="central" style="fill:var(--paper);font-weight:600;pointer-events:none">BAKRE TRAPP</text>`; }
+  // items (under walls): zones first, then podiums, then others
+  const vis = S.items.filter(it => it.kind !== "dim" && (it.f === f || (it.both && f === 1)) && (it.st !== "demo" || opts.demo) && (opts.existing || it.st !== "ex" || !isFurniture(it) || it.fixed));
+  const order = it => kindOf(it).zone ? 0 : kindOf(it).podium ? 1 : kindOf(it).stair ? 2 : kindOf(it).note ? 9 : 5;
+  const coll = forExport ? new Set() : collisions(f);
+  vis.sort((a, b) => order(a) - order(b)).forEach(it => { if (kindOf(it).note) return; s += itemSVG(it, coll.has(it.id) ? "coll" : ""); });
+  // walls
+  const live = walls.filter(w => w.st !== "demo");
+  walls.forEach(w => {
+    if (w.st === "demo" && !opts.demo) return;
+    const ext = w.st === "demo" ? [0, 0] : wallJoinExt(w, live);
+    const cls = w.st === "demo" ? "demo" : w.st === "new" ? "new" : "";
+    let g = `<g data-t="wall" data-id="${w.id}">`;
+    g += `<line x1="${w.a[0]}" y1="${w.a[1]}" x2="${w.b[0]}" y2="${w.b[1]}" style="stroke:transparent;stroke-width:${Math.max(w.t * k, 14)}"/>`;
+    wallPieces(w, ext).forEach(p => g += `<polygon points="${ptsStr(p)}" class="pl-wall ${cls}" style="stroke-width:1"/>`);
+    if (w.st !== "demo") (w.ops || []).forEach(o => g += `<g data-t="op" data-id="${w.id}" data-op="${o.id}" style="stroke-width:1">${openingSVG(w, o)}<rect x="0" y="0" width="0" height="0"/></g>`);
+    g += "</g>";
+    s += g;
+  });
+  // notes on top
+  vis.filter(it => kindOf(it).note).forEach(it => s += itemSVG(it));
+  // wall dimension labels
+  if (opts.dims || forExport === "dims") walls.filter(w => w.st !== "demo").forEach(w => s += wallDimSVG(w, k));
+  // dims
+  S.items.filter(it => it.kind === "dim" && it.f === f).forEach(it => s += dimSVG(it, k));
+  return s;
+}
+function wallDimSVG(w, k) {
+  const { L, u, n } = wallGeom(w); if (L < 0.3) return "";
+  const off = w.t / 2 + 12 / k; const m = [(w.a[0] + w.b[0]) / 2 + n[0] * off, (w.a[1] + w.b[1]) / 2 + n[1] * off];
+  let ang = Math.atan2(u[1], u[0]) * 180 / Math.PI; if (ang > 90) ang -= 180; if (ang < -90) ang += 180;
+  const fs = clamp(10 / k, 0.08, 0.3);
+  return `<text x="${m[0]}" y="${m[1]}" font-size="${fs}" text-anchor="middle" dominant-baseline="central" class="pl-dim" transform="rotate(${ang} ${m[0]} ${m[1]})" style="pointer-events:none;fill:var(--ink-2)">${fmt(L)}</text>`;
+}
+function dimSVG(it, k) {
+  const a = it.a, b = it.b; const Ld = dist(a, b); if (Ld < 1e-3) return "";
+  const u = [(b[0] - a[0]) / Ld, (b[1] - a[1]) / Ld], n = [-u[1], u[0]]; const tk = 6 / k;
+  const m = [(a[0] + b[0]) / 2, (a[1] + b[1]) / 2]; let ang = Math.atan2(u[1], u[0]) * 180 / Math.PI; if (ang > 90) ang -= 180; if (ang < -90) ang += 180;
+  const fs = clamp(12 / k, 0.1, 0.4); const selc = sel.includes(it.id);
+  const col = selc ? "var(--sel)" : "var(--accent)";
+  const lbl = fmt(Ld) + " m"; const bw = (lbl.length * 0.62 + 0.8) * fs;
+  return `<g data-t="item" data-id="${it.id}" style="stroke-width:1.4">
+   <line x1="${a[0]}" y1="${a[1]}" x2="${b[0]}" y2="${b[1]}" style="stroke:${col};stroke-width:1.4"/>
+   <line x1="${a[0] - n[0] * tk}" y1="${a[1] - n[1] * tk}" x2="${a[0] + n[0] * tk}" y2="${a[1] + n[1] * tk}" style="stroke:${col};stroke-width:1.4"/>
+   <line x1="${b[0] - n[0] * tk}" y1="${b[1] - n[1] * tk}" x2="${b[0] + n[0] * tk}" y2="${b[1] + n[1] * tk}" style="stroke:${col};stroke-width:1.4"/>
+   <g transform="rotate(${ang} ${m[0]} ${m[1]})"><rect x="${m[0] - bw / 2}" y="${m[1] - fs * 0.75}" width="${bw}" height="${fs * 1.5}" rx="${fs * 0.4}" style="fill:var(--panel);stroke:${col};stroke-width:1"/>
+   <text x="${m[0]}" y="${m[1]}" font-size="${fs}" text-anchor="middle" dominant-baseline="central" class="pl-dim">${lbl}</text></g>
+   <line x1="${a[0]}" y1="${a[1]}" x2="${b[0]}" y2="${b[1]}" style="stroke:transparent;stroke-width:14"/></g>`;
+}
+function selectionSVG() {
+  const k = V.k; let s = "";
+  sel.forEach(id => {
+    const it = findItem(id);
+    if (it && it.kind === "dim") { if (sel.length === 1) [["a", it.a], ["b", it.b]].forEach(([h, p]) => s += `<circle cx="${p[0]}" cy="${p[1]}" r="${6 / k}" class="pl-handle" style="stroke-width:1.5" data-t="handle" data-h="dim${h}" data-id="${id}"/>`); return; }
+    if (it && (it.f === floor || it.both)) {
+      const cs = corners(it, 4 / k);
+      s += `<polygon points="${ptsStr(cs)}" class="pl-sel" style="stroke-width:1.5;stroke-dasharray:5 3"/>`;
+      if (sel.length === 1 && !it.lock && !kindOf(it).note) {
+        corners(it).forEach((p, i) => s += `<rect x="${p[0] - 5 / k}" y="${p[1] - 5 / k}" width="${10 / k}" height="${10 / k}" class="pl-handle" style="stroke-width:1.5" data-t="handle" data-h="c${i}" data-id="${id}"/>`);
+        const top = rotPt(0, -it.d / 2 - 26 / k, it.rot || 0), topE = rotPt(0, -it.d / 2 - 4 / k, it.rot || 0);
+        s += `<line x1="${it.x + topE[0]}" y1="${it.y + topE[1]}" x2="${it.x + top[0]}" y2="${it.y + top[1]}" class="pl-sel" style="stroke-width:1.2"/>`;
+        s += `<circle cx="${it.x + top[0]}" cy="${it.y + top[1]}" r="${7 / k}" class="pl-handle" style="stroke-width:1.5" data-t="handle" data-h="rot" data-id="${id}"/>`;
+      }
+    }
+    const w = findWall(id);
+    if (w && w.f === floor) {
+      const pcs = wallPieces(w);
+      pcs.forEach(p => s += `<polygon points="${ptsStr(p)}" class="pl-sel" style="stroke-width:2"/>`);
+      const { L } = wallGeom(w); const mid = [(w.a[0] + w.b[0]) / 2, (w.a[1] + w.b[1]) / 2];
+      if (sel.length === 1 && w.st !== "demo") {
+        [["a", w.a], ["b", w.b]].forEach(([h, p]) => s += `<circle cx="${p[0]}" cy="${p[1]}" r="${7 / k}" class="pl-handle" style="stroke-width:1.8" data-t="handle" data-h="w${h}" data-id="${id}"/>`);
+        s += wallDimSVG(w, k);
+        (w.ops || []).forEach(o => { const { u } = wallGeom(w); const c = [w.a[0] + u[0] * o.at, w.a[1] + u[1] * o.at]; const on = selOp && selOp.op === o.id; s += `<rect x="${c[0] - 6 / k}" y="${c[1] - 6 / k}" width="${12 / k}" height="${12 / k}" rx="${2 / k}" class="pl-handle" style="stroke-width:1.6;${on ? "fill:var(--sel)" : ""}" data-t="handle" data-h="op" data-op="${o.id}" data-id="${id}"/>`; });
+      }
+    }
+  });
+  return s;
+}
+function collisions(f) {
+  const out = new Set();
+  const items = S.items.filter(it => it.f === f && it.st !== "demo" && isFurniture(it) && !kindOf(it).zone && !kindOf(it).note && !kindOf(it).podium && it.kind !== "dim" && it.kind !== "sign" && it.st === "new");
+  const walls = S.walls.filter(w => w.f === f && w.st !== "demo");
+  items.forEach(it => {
+    const cs = corners(it, -0.02);
+    for (const w of walls) for (const p of wallPieces(w)) if (polysOverlap(cs, p)) { out.add(it.id); return; }
+  });
+  return out;
+}
+let ghostPlace = null, drawState = null, measureState = null, snapMark = null;
+let rafPending = false;
+function render() { if (rafPending) return; rafPending = true; requestAnimationFrame(() => { rafPending = false; renderNow(); }); }
+function renderNow() {
+  if (view !== "plan") return;
+  const k = V.k;
+  let s = renderDefs();
+  s += `<rect x="-2000" y="-2000" width="4000" height="4000" class="pl-paper"/>`;
+  s += `<g transform="translate(${V.tx.toFixed(2)},${V.ty.toFixed(2)}) scale(${k.toFixed(4)})">`;
+  s += `<rect x="-20" y="-20" width="60" height="50" style="fill:url(#gridp)"/>`;
+  s += planSVG(floor);
+  s += selectionSVG();
+  if (ghostPlace && place) { const it = Object.assign({ id: "ghost", st: "new", f: floor }, ghostPlace); s += `<g style="opacity:.6;pointer-events:none">${itemSVG(it)}</g>`; }
+  if (drawState && drawState.pts.length) {
+    const pts = drawState.pts.concat(drawState.cur ? [drawState.cur] : []);
+    s += `<polyline points="${ptsStr(pts)}" style="fill:none;stroke:var(--wall-new);stroke-width:${Math.max(drawState.t * k, 3)};stroke-opacity:.75"/>`;
+    pts.forEach(p => s += `<circle cx="${p[0]}" cy="${p[1]}" r="${3.5 / k}" style="fill:var(--wall-new)"/>`);
+    if (drawState.cur) { const a = drawState.pts[drawState.pts.length - 1], b = drawState.cur; s += dimSVG({ id: "_", a, b }, k); }
+  }
+  if (measureState && measureState.a && measureState.cur) s += dimSVG({ id: "_", a: measureState.a, b: measureState.cur }, k);
+  if (snapMark) s += `<circle cx="${snapMark[0]}" cy="${snapMark[1]}" r="${7 / k}" style="fill:none;stroke:var(--sel);stroke-width:2"/>`;
+  s += `</g>`;
+  svg.innerHTML = s;
+  // scale bar
+  const m = [0.5, 1, 2, 5, 10].find(v => v * k > 70) || 10;
+  $("#scaleline").style.width = (m * k) + "px"; $("#scaletext").textContent = (m < 1 ? fmt(m * 100, 0) + " cm" : fmt(m, 0) + " m");
+}
+
+/* ===================== Interaction ===================== */
+let drag = null; const pointers = new Map();
+function hitInfo(target) {
+  const h = target.closest("[data-t]"); if (!h) return null;
+  return { t: h.dataset.t, id: h.dataset.id, h: h.dataset.h, op: h.dataset.op };
+}
+function snapPoint(p, { from = null, excludeWall = null, grid = true } = {}) {
+  const k = V.k; let best = null, bd = 12 / k;
+  S.walls.filter(w => w.f === floor && w.st !== "demo" && w.id !== excludeWall).forEach(w => [w.a, w.b].forEach(q => { const d = dist(p, q); if (d < bd) { bd = d; best = q.slice(); } }));
+  if (drawState) drawState.pts.forEach(q => { const d = dist(p, q); if (d < bd) { bd = d; best = q.slice(); } });
+  if (best) return { p: best, snapped: true };
+  let q = p.slice();
+  if (from && !(window.event && window.event.altKey)) {
+    const dx = q[0] - from[0], dy = q[1] - from[1]; const Ln = Math.hypot(dx, dy); let ang = Math.atan2(dy, dx) * 180 / Math.PI;
+    const sn = Math.round(ang / 45) * 45; if (Math.abs(ang - sn) < 6) ang = sn;
+    let Lr = opts.snap ? Math.round(Ln / 0.05) * 0.05 : Ln;
+    q = [from[0] + Math.cos(rad(ang)) * Lr, from[1] + Math.sin(rad(ang)) * Lr];
+  }
+  // snap onto wall line
+  let bw = 8 / k, onw = null;
+  S.walls.filter(w => w.f === floor && w.st !== "demo" && w.id !== excludeWall).forEach(w => { const pr = projSeg(q, w.a, w.b); if (pr.d < bw && pr.t > 0 && pr.t < 1) { bw = pr.d; onw = pr.q; } });
+  if (onw && !from) return { p: onw, snapped: true };
+  if (!from && grid && opts.snap) q = [Math.round(q[0] / 0.05) * 0.05, Math.round(q[1] / 0.05) * 0.05];
+  return { p: q, snapped: false };
+}
+function onDown(e) {
+  if (view !== "plan") return;
+  svg.setPointerCapture(e.pointerId);
+  pointers.set(e.pointerId, [e.clientX, e.clientY]);
+  if (pointers.size === 2) { const [p1, p2] = [...pointers.values()]; drag = { type: "pinch", d0: dist(p1, p2), k0: V.k, c: [(p1[0] + p2[0]) / 2, (p1[1] + p2[1]) / 2], tx: V.tx, ty: V.ty }; return; }
+  const w = toWorld(e.clientX, e.clientY);
+  if (e.button === 1 || (e.button === 0 && (tool === "pan" || spaceDown))) { drag = { type: "pan", sx: e.clientX, sy: e.clientY, tx: V.tx, ty: V.ty }; svg.style.cursor = "grabbing"; return; }
+  if (e.button === 2) { if (drawState) finishWall(); return; }
+  if (place) { placeItem(place.kind, ghostPlace ? [ghostPlace.x, ghostPlace.y] : w, e.shiftKey); return; }
+  if (tool === "wall") { wallClick(w, e); return; }
+  if (tool === "measure") { measureClick(w); return; }
+  const hi = hitInfo(e.target);
+  if (hi && hi.t === "handle") { startHandle(hi, w, e); return; }
+  if (hi && hi.t === "op") { selectOnly(hi.id); selOp = { wall: hi.id, op: hi.op }; drag = { type: "op", id: hi.id, op: hi.op, before: snapshotBefore(), moved: false }; updatePane(); render(); return; }
+  if (hi && (hi.t === "item" || hi.t === "wall" || hi.t === "level")) {
+    const id = hi.id;
+    if (e.shiftKey || e.ctrlKey || e.metaKey) { sel = sel.includes(id) ? sel.filter(x => x !== id) : sel.concat(id); }
+    else if (!sel.includes(id)) { sel = [id]; }
+    selOp = null;
+    const movable = sel.filter(x => { const o = findAny(x); return o && !o.lock && typeOf(x) !== "level" && o.st !== "demo"; });
+    drag = { type: "move", start: w, ids: movable, orig: movable.map(x => clone(findAny(x))), before: snapshotBefore(), moved: false, sx: e.clientX, sy: e.clientY };
+    updatePane(); render(); return;
+  }
+  // empty: deselect + pan
+  if (sel.length) { sel = []; selOp = null; updatePane(); }
+  drag = { type: "pan", sx: e.clientX, sy: e.clientY, tx: V.tx, ty: V.ty, click: true };
+  render();
+}
+function startHandle(hi, w, e) {
+  const id = hi.id; const it = findItem(id), wl = findWall(id);
+  const before = snapshotBefore();
+  if (hi.h === "rot") drag = { type: "rot", id, before };
+  else if (hi.h && hi.h[0] === "c") { const i = +hi.h[1]; const cs = corners(it); drag = { type: "resize", id, i, anchor: cs[(i + 2) % 4], before }; }
+  else if (hi.h === "wa" || hi.h === "wb") { const target = ensureEditableWall(wl); drag = { type: "wend", id: target.id, end: hi.h[1], before, pre: target !== wl }; }
+  else if (hi.h === "dima" || hi.h === "dimb") drag = { type: "dimend", id, end: hi.h[3], before };
+  else if (hi.h === "op") { selOp = { wall: id, op: hi.op }; drag = { type: "op", id, op: hi.op, before, moved: false }; updatePane(); }
+}
+function ensureEditableWall(w) {
+  // Moving an existing wall = demolish original + new wall at the new position
+  if (w.st !== "ex") return w;
+  const nw = clone(w); nw.id = uid("w"); nw.st = "new"; nw.from = w.id; (nw.ops || []).forEach(o => o.id = uid("o"));
+  w.st = "demo";
+  S.walls.push(nw); sel = [nw.id];
+  return nw;
+}
+function onMove(e) {
+  if (view !== "plan") return;
+  if (pointers.has(e.pointerId)) pointers.set(e.pointerId, [e.clientX, e.clientY]);
+  const w = toWorld(e.clientX, e.clientY);
+  if (drag && drag.type === "pinch" && pointers.size === 2) {
+    const [p1, p2] = [...pointers.values()]; const d = dist(p1, p2); const c = [(p1[0] + p2[0]) / 2, (p1[1] + p2[1]) / 2];
+    const r = svg.getBoundingClientRect(); const nk = clamp(drag.k0 * d / drag.d0, 12, 600);
+    const cx = drag.c[0] - r.left, cy = drag.c[1] - r.top;
+    V.tx = cx - (cx - drag.tx) * nk / drag.k0 + (c[0] - drag.c[0]); V.ty = cy - (cy - drag.ty) * nk / drag.k0 + (c[1] - drag.c[1]); V.k = nk; render(); return;
+  }
+  if (place) { const c = CAT[place.kind]; const g = opts.snap ? [Math.round(w[0] / 0.05) * 0.05, Math.round(w[1] / 0.05) * 0.05] : w; ghostPlace = { kind: place.kind, x: g[0], y: g[1], w: c.w, d: c.d, h: c.h, rot: place.rot || 0, label: c.label }; render(); return; }
+  if (tool === "wall" && drawState) { const from = drawState.pts[drawState.pts.length - 1]; const sp = snapPoint(w, { from }); drawState.cur = sp.p; snapMark = sp.snapped ? sp.p : null; render(); return; }
+  if (tool === "wall" && !drawState) { const sp = snapPoint(w); snapMark = sp.snapped ? sp.p : null; render(); }
+  if (tool === "measure") { const sp = snapPoint(w); snapMark = sp.snapped ? sp.p : null; if (measureState && measureState.a) measureState.cur = sp.p; render(); }
+  if (!drag) { hoverCursor(e); return; }
+  if (drag.type === "pan") { V.tx = drag.tx + e.clientX - drag.sx; V.ty = drag.ty + e.clientY - drag.sy; if (Math.hypot(e.clientX - drag.sx, e.clientY - drag.sy) > 4) drag.click = false; render(); return; }
+  if (drag.type === "move") {
+    if (!drag.moved && Math.hypot(e.clientX - drag.sx, e.clientY - drag.sy) < 4) return;
+    if (!drag.moved) {
+      drag.moved = true;
+      // convert existing walls to demolish + new copy
+      drag.ids = drag.ids.map((id, i) => { const wl = findWall(id); if (wl && wl.st === "ex") { const nw = ensureEditableWall(wl); drag.orig[i] = clone(nw); sel = sel.map(x => x === id ? nw.id : x); return nw.id; } return id; });
+    }
+    let dx = w[0] - drag.start[0], dy = w[1] - drag.start[1];
+    if (opts.snap) { dx = Math.round(dx / 0.05) * 0.05; dy = Math.round(dy / 0.05) * 0.05; }
+    drag.ids.forEach((id, i) => {
+      const o = findAny(id), O = drag.orig[i]; if (!o) return;
+      if (o.kind === "dim") { o.a = [O.a[0] + dx, O.a[1] + dy]; o.b = [O.b[0] + dx, O.b[1] + dy]; }
+      else if (o.a && o.b) { o.a = [r2(O.a[0] + dx), r2(O.a[1] + dy)]; o.b = [r2(O.b[0] + dx), r2(O.b[1] + dy)]; }
+      else { o.x = O.x + dx; o.y = O.y + dy; }
+    });
+    render(); updatePaneSoon(); return;
+  }
+  if (drag.type === "rot") { const it = findItem(drag.id); let a = Math.atan2(w[1] - it.y, w[0] - it.x) * 180 / Math.PI + 90; if (!e.shiftKey) a = Math.round(a / 15) * 15; it.rot = ((a + 540) % 360) - 180; drag.moved = true; render(); updatePaneSoon(); return; }
+  if (drag.type === "resize") {
+    const it = findItem(drag.id); const A = drag.anchor; const loc = rotPt(w[0] - A[0], w[1] - A[1], -(it.rot || 0));
+    const i = drag.i; const sx = (i === 1 || i === 2) ? 1 : -1, sy = (i >= 2) ? 1 : -1;
+    // anchor is the opposite corner, so width = loc.x * sx (anchor at -sx)
+    const mn = kindOf(it).stair || it.kind === "rail" || it.kind === "sign" || it.kind === "screen" || it.kind === "partition" ? 0.04 : 0.2;
+    let nw = Math.max(mn, loc[0] * sx), nd = Math.max(mn, loc[1] * sy);
+    if (opts.snap) { nw = Math.max(mn, Math.round(nw / 0.05) * 0.05); nd = Math.max(mn, Math.round(nd / 0.05) * 0.05); }
+    if (kindOf(it).round || e.shiftKey) { const m = Math.max(nw, nd); nw = nd = m; }
+    const cl = rotPt(sx * nw / 2, sy * nd / 2, it.rot || 0);
+    it.w = r2(nw); it.d = r2(nd); it.x = A[0] + cl[0]; it.y = A[1] + cl[1]; drag.moved = true; render(); updatePaneSoon(); return;
+  }
+  if (drag.type === "wend") {
+    const wl = findWall(drag.id); const other = drag.end === "a" ? wl.b : wl.a; const sp = snapPoint(w, { from: other, excludeWall: wl.id });
+    const sp2 = snapPoint(w, { excludeWall: wl.id }); const p = sp2.snapped ? sp2.p : sp.p; snapMark = sp2.snapped ? p : null;
+    const oldL = wallGeom(wl).L;
+    if (drag.end === "a") { wl.a = [r2(p[0]), r2(p[1])]; const nL = wallGeom(wl).L; (wl.ops || []).forEach(o => o.at = clamp(o.at + (nL - oldL), o.w / 2, nL - o.w / 2)); }
+    else { wl.b = [r2(p[0]), r2(p[1])]; const nL = wallGeom(wl).L; (wl.ops || []).forEach(o => o.at = clamp(o.at, o.w / 2, nL - o.w / 2)); }
+    drag.moved = true; render(); updatePaneSoon(); return;
+  }
+  if (drag.type === "dimend") { const it = findItem(drag.id); const sp = snapPoint(w); it[drag.end] = sp.p; snapMark = sp.snapped ? sp.p : null; drag.moved = true; render(); return; }
+  if (drag.type === "op") {
+    let wl = findWall(drag.id); const o = (wl.ops || []).find(x => x.id === drag.op); if (!o) return;
+    if (!drag.moved) { drag.moved = true; if (wl.st === "ex") { const nw = ensureEditableWall(wl); const idx = wl.ops.indexOf(o); wl = nw; drag.id = nw.id; drag.op = nw.ops[idx].id; selOp = { wall: nw.id, op: drag.op }; } }
+    const op = wl.ops.find(x => x.id === drag.op); const { L } = wallGeom(wl); const pr = projSeg(w, wl.a, wl.b);
+    let at = pr.t * L; if (opts.snap) at = Math.round(at / 0.05) * 0.05; op.at = r2(clamp(at, op.w / 2, L - op.w / 2)); render(); updatePaneSoon(); return;
+  }
+}
+function onUp(e) {
+  pointers.delete(e.pointerId);
+  if (!drag) return;
+  const d = drag; drag = null; svg.style.cursor = ""; snapMark = null;
+  if (d.type === "pinch") { if (pointers.size < 2) drag = null; return; }
+  if (d.type === "pan") { if (d.click && e.pointerType !== "mouse" && false) { } render(); return; }
+  if (["move", "rot", "resize", "wend", "dimend", "op"].includes(d.type)) {
+    if (d.moved) { if (d.type === "move") d.ids.forEach(id => { const o = findItem(id); if (o && o.x != null) { o.x = r2(o.x); o.y = r2(o.y); } }); pushPast(d.before); afterChange(); }
+    else render();
+  }
+}
+function hoverCursor(e) {
+  const hi = hitInfo(e.target); let c = "";
+  if (tool === "wall" || tool === "measure" || place) c = "crosshair";
+  else if (tool === "pan") c = "grab";
+  else if (hi) { if (hi.t === "handle") c = hi.h === "rot" ? "grab" : hi.h === "op" ? "ew-resize" : "pointer"; else { const o = findAny(hi.id); c = o && !o.lock && hi.t !== "level" ? "move" : "pointer"; } }
+  svg.style.cursor = c;
+  const tip = hi && (hi.t === "item" || hi.t === "wall" || hi.t === "level") ? labelOf(hi.id) : "";
+  svg.setAttribute("title", tip);
+}
+function labelOf(id) { const it = findItem(id); if (it) return it.name || kindOf(it).n; const w = findWall(id); if (w) return (w.st === "new" ? "Ny vegg" : w.st === "demo" ? "Revet vegg" : w.ext ? "Yttervegg" : "Vegg") + " · " + fm(wallGeom(w).L); const l = findLevel(id); if (l) return l.name; return ""; }
+function onWheel(e) {
+  if (view !== "plan") return; e.preventDefault();
+  if (e.ctrlKey || Math.abs(e.deltaY) >= Math.abs(e.deltaX) && !e.shiftKey && (e.deltaMode === 1 || Math.abs(e.deltaY) > 0)) {
+    const f = Math.exp(-e.deltaY * (e.deltaMode === 1 ? 0.05 : e.ctrlKey ? 0.01 : 0.0015)); zoomAt(f, e.clientX, e.clientY);
+  } else { V.tx -= e.deltaX; V.ty -= e.deltaY; render(); }
+}
+
+/* ----- wall drawing ----- */
+function wallClick(w, e) {
+  if (!drawState) { const sp = snapPoint(w); drawState = { pts: [sp.p], cur: null, t: 0.1, h: floor === 0 ? 2.45 : 2.3, before: snapshotBefore(), made: 0 }; showHint("Klikk for neste hjørne. Skriv et tall for nøyaktig lengde. Dobbeltklikk, Enter eller Esc for å avslutte."); render(); return; }
+  const from = drawState.pts[drawState.pts.length - 1]; const sp = snapPoint(w, { from }); const p = sp.p;
+  if (dist(p, from) < 0.05) { finishWall(); return; }
+  addWallSeg(from, p);
+  if (dist(p, drawState.pts[0]) < 0.02 && drawState.pts.length > 2) { finishWall(); return; }
+  drawState.pts.push(p); render();
+}
+function addWallSeg(a, b) {
+  const wl = { id: uid("w"), f: floor, a: [r2(a[0]), r2(a[1])], b: [r2(b[0]), r2(b[1])], t: drawState.t, h: drawState.h, ext: false, st: "new", ops: [] };
+  S.walls.push(wl); drawState.made++; drawState.last = wl.id;
+}
+function finishWall() {
+  if (!drawState) return; const ds = drawState; drawState = null; snapMark = null; hideHint(); hideLenInput();
+  if (ds.made) { pushPast(ds.before); sel = [ds.last]; setTool("select"); afterChange(); toast(ds.made === 1 ? "Ny vegg tegnet" : `${ds.made} nye veggdeler tegnet`); }
+  else render();
+}
+let lenBox = null;
+function showLenInput(first) {
+  if (!lenBox) { lenBox = document.createElement("div"); lenBox.className = "hint"; lenBox.style.top = "54px"; lenBox.style.pointerEvents = "auto"; lenBox.innerHTML = `Lengde <input id="lenIn" inputmode="decimal" style="width:70px;margin:0 6px;border-radius:6px;border:0;padding:2px 6px;color:#111;font-family:var(--font-num)"> m ↵`; stage.appendChild(lenBox); $("#lenIn").addEventListener("keydown", ev => { if (ev.key === "Enter") { applyLen(); ev.preventDefault(); } if (ev.key === "Escape") { hideLenInput(); } ev.stopPropagation(); }); }
+  lenBox.hidden = false; const i = $("#lenIn"); i.value = first || ""; i.focus();
+}
+function hideLenInput() { if (lenBox) lenBox.hidden = true; }
+function applyLen() {
+  const v = parseNum($("#lenIn").value); hideLenInput(); if (!drawState || !v) return;
+  const from = drawState.pts[drawState.pts.length - 1]; const to = drawState.cur || [from[0] + 1, from[1]];
+  let ang = Math.atan2(to[1] - from[1], to[0] - from[0]); if (dist(from, to) < 1e-6) ang = 0;
+  const p = [from[0] + Math.cos(ang) * v, from[1] + Math.sin(ang) * v]; addWallSeg(from, p); drawState.pts.push(p); drawState.cur = p; render();
+}
+/* ----- measure ----- */
+function measureClick(w) {
+  const sp = snapPoint(w);
+  if (!measureState || !measureState.a) { measureState = { a: sp.p, cur: sp.p }; showHint("Klikk på punktet du vil måle til. Esc for å avbryte."); render(); return; }
+  const it = { id: uid("d"), kind: "dim", f: floor, a: measureState.a, b: sp.p, st: "new", x: 0, y: 0, w: 0, d: 0, rot: 0 };
+  const before = snapshotBefore(); S.items.push(it); pushPast(before); measureState = null; hideHint(); sel = [it.id]; afterChange();
+  toast("Mål lagt til: " + fm(dist(it.a, it.b)));
+}
+/* ----- placing ----- */
+function armPlace(kind) {
+  if (place && place.kind === kind) { disarm(); return; }
+  place = { kind, rot: 0 }; setTool("select", true); ghostPlace = null;
+  $$(".lib-item").forEach(b => b.setAttribute("aria-pressed", b.dataset.k === kind));
+  showHint(`Klikk i tegningen for å plassere «${CAT[kind].n}». R roterer. Esc avbryter.`);
+}
+function disarm() { place = null; ghostPlace = null; $$(".lib-item").forEach(b => b.setAttribute("aria-pressed", "false")); hideHint(); render(); }
+function placeItem(kind, p, keep) {
+  const c = CAT[kind];
+  const it = { id: uid("n"), kind, f: floor, x: r2(p[0]), y: r2(p[1]), w: c.w, d: c.d, h: c.h, rot: place ? place.rot || 0 : 0, st: "new" };
+  if (c.label) it.label = c.label; if (c.steps) it.steps = c.steps; if (c.z0) it.z0 = c.z0;
+  if (c.stair) { it.z0 = 0; }
+  const before = snapshotBefore(); S.items.push(it); pushPast(before);
+  sel = [it.id];
+  if (!keep) disarm();
+  afterChange();
+  if (c.note || c.zone) setTimeout(() => { const i = $("#fLabel"); if (i) { i.focus(); i.select(); } }, 30);
+  return it;
+}
+
+/* ----- keyboard ----- */
+let spaceDown = false;
+document.addEventListener("keydown", e => {
+  const tag = (e.target.tagName || "").toLowerCase(); if (tag === "input" || tag === "textarea" || tag === "select") { if (e.key === "Escape") { if ($("#dialogs").children.length) closeDialog(); else e.target.blur(); } return; }
+  if ($("#dialogs").children.length) { if (e.key === "Escape") closeDialog(); return; }
+  const mod = e.ctrlKey || e.metaKey;
+  if (mod && e.key.toLowerCase() === "z") { e.preventDefault(); e.shiftKey ? redo() : undo(); return; }
+  if (mod && e.key.toLowerCase() === "y") { e.preventDefault(); redo(); return; }
+  if (mod && e.key.toLowerCase() === "d") { e.preventDefault(); duplicateSel(); return; }
+  if (mod && e.key.toLowerCase() === "s") { e.preventDefault(); quickSave(); return; }
+  if (e.key === " ") { spaceDown = true; return; }
+  if (drawState && /^[0-9]$/.test(e.key)) { e.preventDefault(); showLenInput(e.key); return; }
+  if (e.key === "Escape") { if (drawState) finishWall(); else if (measureState) { measureState = null; hideHint(); render(); } else if (place) disarm(); else if (tool !== "select") setTool("select"); else { sel = []; selOp = null; updatePane(); render(); } return; }
+  if (e.key === "Enter" && drawState) { finishWall(); return; }
+  if (e.key === "Delete" || e.key === "Backspace") { e.preventDefault(); deleteSel(); return; }
+  const k = e.key.toLowerCase();
+  if (k === "v") setTool("select"); else if (k === "w") setTool("wall"); else if (k === "m") setTool("measure"); else if (k === "h") setTool("pan");
+  else if (k === "r") { if (place) { place.rot = ((place.rot || 0) + (e.shiftKey ? -90 : 90)) % 360; if (ghostPlace) ghostPlace.rot = place.rot; render(); } else rotateSel(e.shiftKey ? -90 : 90); }
+  else if (k === "+" || k === "=") { const r = svg.getBoundingClientRect(); zoomAt(1.25, r.left + r.width / 2, r.top + r.height / 2); }
+  else if (k === "-") { const r = svg.getBoundingClientRect(); zoomAt(0.8, r.left + r.width / 2, r.top + r.height / 2); }
+  else if (k === "0") fit();
+  else if (k === "1") setFloor(0); else if (k === "2") setFloor(1);
+  else if (e.key.startsWith("Arrow") && sel.length) { e.preventDefault(); const st = e.shiftKey ? 0.5 : 0.05; const dx = e.key === "ArrowLeft" ? -st : e.key === "ArrowRight" ? st : 0, dy = e.key === "ArrowUp" ? -st : e.key === "ArrowDown" ? st : 0; nudge(dx, dy); }
+});
+document.addEventListener("keyup", e => { if (e.key === " ") spaceDown = false; });
+function nudge(dx, dy) {
+  const before = snapshotBefore(); let any = false;
+  sel.forEach(id => { const o = findAny(id); if (!o || o.lock || o.st === "demo" || typeOf(id) === "level") return; any = true; if (o.a && o.b) { let w = o; if (typeOf(id) === "wall") w = ensureEditableWall(o); w.a = [r2(w.a[0] + dx), r2(w.a[1] + dy)]; w.b = [r2(w.b[0] + dx), r2(w.b[1] + dy)]; } else { o.x = r2(o.x + dx); o.y = r2(o.y + dy); } });
+  if (any) { pushPast(before); afterChange(); }
+}
+
+/* ===================== Operations ===================== */
+function deleteSel() {
+  if (!sel.length) return; const before = snapshotBefore(); let n = 0, locked = 0;
+  if (selOp) { const w = findWall(selOp.wall); if (w) { let tw = w; if (w.st === "ex") { tw = ensureEditableWall(w); const idx = w.ops.findIndex(o => o.id === selOp.op); tw.ops.splice(idx, 1); } else tw.ops = tw.ops.filter(o => o.id !== selOp.op); selOp = null; pushPast(before); afterChange(); toast("Åpningen er fjernet"); return; } }
+  sel.forEach(id => {
+    const o = findAny(id); if (!o) return;
+    if (o.lock) { locked++; return; }
+    if (o.st === "ex" && findItem(id) && isLoose(o)) { S.items = S.items.filter(x => x.id !== id); n++; }
+    else if (o.st === "ex") { o.st = "demo"; n++; }
+    else if (o.st === "new") { S.items = S.items.filter(x => x.id !== id); S.walls = S.walls.filter(x => x.id !== id); S.levels = S.levels.filter(x => x.id !== id); n++; }
+  });
+  if (n) { pushPast(before); sel = sel.filter(id => findAny(id) && findAny(id).st !== "demo" && findAny(id).lock); afterChange(); toast(n === 1 ? "Fjernet. Ctrl+Z angrer." : `${n} elementer fjernet. Ctrl+Z angrer.`); }
+  else if (locked) toast("Elementet er låst. Lås det opp i panelet til høyre først.");
+}
+function restore(id) { const o = findAny(id); if (!o) return; const before = snapshotBefore(); o.st = "ex"; pushPast(before); afterChange(); toast("Gjenopprettet"); }
+function duplicateSel() {
+  const before = snapshotBefore(); const ns = [];
+  sel.forEach(id => { const it = findItem(id), w = findWall(id); if (it && !it.lock) { const c = clone(it); c.id = uid("n"); c.st = "new"; delete c.fixed; delete c.lock; delete c.both; if (c.kind === "dim") { c.a = [c.a[0] + 0.3, c.a[1] + 0.3]; c.b = [c.b[0] + 0.3, c.b[1] + 0.3]; } else { c.x += 0.3; c.y += 0.3; } S.items.push(c); ns.push(c.id); } if (w) { const c = clone(w); c.id = uid("w"); c.st = "new"; c.a = [c.a[0] + 0.3, c.a[1] + 0.3]; c.b = [c.b[0] + 0.3, c.b[1] + 0.3]; (c.ops || []).forEach(o => o.id = uid("o")); S.walls.push(c); ns.push(c.id); } });
+  if (ns.length) { pushPast(before); sel = ns; afterChange(); toast("Duplisert"); }
+}
+function rotateSel(deg) {
+  const before = snapshotBefore(); let any = false;
+  sel.forEach(id => { const it = findItem(id); if (it && !it.lock && it.kind !== "dim") { it.rot = (((it.rot || 0) + deg + 540) % 360) - 180; any = true; } });
+  if (any) { pushPast(before); afterChange(); }
+}
+function clearLoose() {
+  const before = snapshotBefore(); let n = 0;
+  const keep = S.items.filter(it => !(it.st === "ex" && isLoose(it))); n = S.items.length - keep.length; S.items = keep;
+  if (n) { pushPast(before); sel = []; afterChange(); toast(`${n} løse møbler fjernet. Ctrl+Z angrer.`); }
+}
+function demolishBars() {
+  const before = snapshotBefore(); let n = 0;
+  S.items.forEach(it => { if (it.st === "ex" && c_isBar(it)) { it.st = "demo"; n++; } });
+  if (n) { pushPast(before); sel = []; afterChange(); toast(`${n} bardisker og bakbarer markert som revet.`); }
+}
+function afterChange() { render(); updatePane(); updateTitle(); if (view === "3d") schedule3D(); }
+
+/* ===================== Tools / floors / view ===================== */
+function setTool(t, keepPlace) {
+  if (drawState) finishWall(); measureState = null; if (!keepPlace && place) disarm();
+  tool = t; $$(".tool").forEach(b => b.setAttribute("aria-pressed", b.dataset.tool === t));
+  if (t === "wall") showHint("Klikk der veggen skal starte. Veggen fester seg til hjørner og andre vegger.");
+  else if (t === "measure") showHint("Klikk på to punkter for å måle. Målet blir liggende på tegningen.");
+  else if (t === "pan") showHint("Dra for å flytte tegningen. Bruk musehjulet eller to fingre for å zoome.");
+  else if (!place) hideHint();
+  svg.style.cursor = t === "select" ? "" : t === "pan" ? "grab" : "crosshair";
+  if (isPhone()) closeSheets();
+  render();
+}
+function setFloor(f) {
+  if (drawState) finishWall(); floor = f; $("#f0").setAttribute("aria-pressed", f === 0); $("#f1").setAttribute("aria-pressed", f === 1);
+  sel = sel.filter(id => { const o = findAny(id); return o && (o.f === f || o.both); }); selOp = null;
+  $("#compass").textContent = f === 0 ? "Terrasse / Solsiden →" : "Mesanin · 2,65 m over hovedgulvet";
+  updatePane(); if (view === "plan") fit(f); else if (three) three.setMezz(f === 1);
+}
+function setView(v) {
+  view = v; $("#vPlan").setAttribute("aria-pressed", v === "plan"); $("#v3d").setAttribute("aria-pressed", v === "3d");
+  svg.toggleAttribute("hidden", v !== "plan"); $("#three").hidden = v !== "3d"; $("#bar3d").hidden = v !== "3d";
+  ["#zoomCtl", "#scalebar", "#compass"].forEach(s => $(s).hidden = v !== "plan");
+  if (v === "3d") { hideHint(); if (place) disarm(); open3D(); } else { render(); }
+}
+let hintT = 0;
+function showHint(t) { const h = $("#hint"); h.textContent = t; h.hidden = false; }
+function hideHint() { $("#hint").hidden = true; }
+function toast(t) { const el = $("#toast"); el.textContent = t; el.hidden = false; clearTimeout(hintT); hintT = setTimeout(() => el.hidden = true, 2600); }
+
+/* ===================== Library ===================== */
+function iconSVG(kind) {
+  const c = CAT[kind]; const w = c.w, d = Math.max(c.d, 0.12); const pad = 0.12;
+  const vw = Math.max(w, d * 1.3) + pad * 2, vh = vw * 40 / 52;
+  const it = { id: "icon", kind, x: 0, y: 0, w, d: c.d, h: c.h, rot: 0, st: "new", label: c.zone ? "" : c.label };
+  let inner = c.draw(w, c.d, it);
+  if (c.note) inner = `<rect x="${-w / 2}" y="-0.2" width="${w}" height="0.4" rx="0.08" class="it-notebg"/><line x1="${-w / 2 + 0.2}" y1="0" x2="${w / 2 - 0.4}" y2="0" style="stroke:var(--ink-3);stroke-width:2"/>`;
+  return `<svg viewBox="${-vw / 2} ${-vh / 2} ${vw} ${vh}" aria-hidden="true" style="vector-effect:non-scaling-stroke"><g class="icon-g">${inner}</g></svg>`;
+}
+function buildLib(q = "") {
+  q = q.trim().toLowerCase(); let h = "";
+  Object.entries(G).forEach(([g, gname]) => {
+    const ks = Object.values(CAT).filter(c => c.g === g && (!q || (c.n + " " + (c.tags || "")).toLowerCase().includes(q)));
+    if (!ks.length) return;
+    h += `<h3>${gname}</h3><div class="lib-grid">` + ks.map(c => `<button class="lib-item" data-k="${c.k}" aria-pressed="false" title="${esc(c.n)} · ${fmt(c.w)} × ${fmt(c.d)} m">${iconSVG(c.k)}<span>${esc(c.n)}</span><small>${c.note ? "tekst" : c.zone ? "areal" : fmt(c.w, c.w < 1 ? 2 : 1) + "×" + fmt(c.d, c.d < 1 ? 2 : 1)}</small></button>`).join("") + `</div>`;
+  });
+  $("#lib").innerHTML = h || `<div class="empty">Ingen treff. Prøv «bord», «bar» eller «scene».</div>`;
+}
+let libDrag = null;
+$("#lib").addEventListener("pointerdown", e => { const b = e.target.closest(".lib-item"); if (!b) return; libDrag = { k: b.dataset.k, sx: e.clientX, sy: e.clientY, started: false, id: e.pointerId }; });
+window.addEventListener("pointermove", e => {
+  if (!libDrag || e.pointerId !== libDrag.id) return;
+  if (!libDrag.started && Math.hypot(e.clientX - libDrag.sx, e.clientY - libDrag.sy) > 8) { libDrag.started = true; place = { kind: libDrag.k, rot: 0 }; if (view !== "plan") setView("plan"); }
+  if (libDrag.started) { const r = svg.getBoundingClientRect(); if (e.clientX > r.left && e.clientX < r.right && e.clientY > r.top && e.clientY < r.bottom) { const w = toWorld(e.clientX, e.clientY); const c = CAT[libDrag.k]; ghostPlace = { kind: libDrag.k, x: Math.round(w[0] / 0.05) * 0.05, y: Math.round(w[1] / 0.05) * 0.05, w: c.w, d: c.d, h: c.h, rot: 0, label: c.label }; } else ghostPlace = null; render(); }
+});
+window.addEventListener("pointerup", e => {
+  if (!libDrag || e.pointerId !== libDrag.id) return; const L0 = libDrag; libDrag = null;
+  if (L0.started) { if (ghostPlace) placeItem(L0.k, [ghostPlace.x, ghostPlace.y]); else disarm(); return; }
+  if (isPhone()) { // tap: place in the middle of the view
+    const r = svg.getBoundingClientRect(); const w = toWorld(r.left + r.width / 2, r.top + r.height / 2); place = { kind: L0.k, rot: 0 }; placeItem(L0.k, [Math.round(w[0] / 0.05) * 0.05, Math.round(w[1] / 0.05) * 0.05]); closeSheets(); toast("Lagt til midt i visningen. Dra for å flytte."); return;
+  }
+  if (view !== "plan") setView("plan");
+  armPlace(L0.k);
+});
+$("#libSearch").addEventListener("input", e => buildLib(e.target.value));
+
+/* ===================== Right pane ===================== */
+let paneT = 0;
+function updatePaneSoon() { clearTimeout(paneT); paneT = setTimeout(updatePane, 60); }
+function num(id, label, val, unit = "m", step = 0.05, extra = "") { return `<label class="field"><span>${label}</span><div class="unit"><input id="${id}" inputmode="decimal" value="${val == null ? "" : fmt(val, 2)}" data-step="${step}" ${extra}><em>${unit}</em></div></label>`; }
+function statusPill(o) { return o.st === "demo" ? `<span class="pill demo">Revet</span>` : o.st === "new" ? `<span class="pill new">Nytt</span>` : `<span class="pill ex">Eksisterende</span>`; }
+function updatePane() {
+  const p = $("#pane"); const n = sel.length;
+  if (!n) { p.innerHTML = overviewHTML(); bindOverview(); return; }
+  if (n > 1) {
+    p.innerHTML = `<h1>${n} elementer valgt</h1><p class="sub">Dra ett av dem for å flytte alle. Shift+klikk legger til eller fjerner fra utvalget.</p>
+    <div class="actions"><button class="btn" id="aRot"><svg class="i"><use href="#ic-rot"/></svg>Roter 90°</button><button class="btn" id="aDup"><svg class="i"><use href="#ic-copy"/></svg>Dupliser</button><button class="btn danger" id="aDel"><svg class="i"><use href="#ic-trash"/></svg>Fjern</button></div>`;
+    $("#aRot").onclick = () => rotateSel(90); $("#aDup").onclick = duplicateSel; $("#aDel").onclick = deleteSel; return;
+  }
+  const id = sel[0]; const it = findItem(id), w = findWall(id), l = findLevel(id);
+  if (it) p.innerHTML = itemPane(it); else if (w) p.innerHTML = wallPane(w); else if (l) p.innerHTML = levelPane(l);
+  bindPane(id);
+}
+function itemPane(it) {
+  const c = kindOf(it);
+  if (it.kind === "dim") return `<h1>Mål</h1><div class="stat"><b>${fmt(dist(it.a, it.b))} m</b><span>Dra endepunktene for å justere.</span></div><div class="actions"><button class="btn danger" id="aDel"><svg class="i"><use href="#ic-trash"/></svg>Fjern målet</button></div>`;
+  const seats = seatsOf(it), bar = barOf(it);
+  let h = `<div class="row wrap">${statusPill(it)}${it.lock ? `<span class="pill"><svg class="i" style="width:13px;height:13px"><use href="#ic-lock"/></svg>Låst</span>` : ""}</div>`;
+  h += `<label class="field"><span>Navn</span><input id="fName" value="${esc(it.name || c.n)}"></label>`;
+  if (c.zone || c.note) h += `<label class="field"><span>${c.note ? "Tekst" : "Navn på sonen"}</span><input id="fLabel" value="${esc(it.label || "")}" placeholder="${esc(c.label || "")}"></label>`;
+  if (!c.note) h += `<div class="row">${num("fW", c.round ? "Diameter" : c.stair ? "Lengde" : "Bredde", it.w)}${c.round ? "" : num("fD", c.stair ? "Bredde" : "Dybde", it.d)}</div>`;
+  if (!c.note && !c.zone) h += `<div class="row">${num("fH", c.podium ? "Høyde over gulv" : c.stair ? "Stigning" : "Høyde", it.h)}${c.stair ? `<label class="field"><span>Trinn</span><input id="fSteps" inputmode="numeric" value="${it.steps || c.steps || 3}"></label>` : ""}</div>`;
+  if (!c.round || c.note) h += `<div class="field"><span>Rotasjon</span><div class="rot-row"><input type="range" id="fRot" min="-180" max="180" step="${1}" value="${Math.round(it.rot || 0)}" aria-label="Rotasjon"><span class="num" id="fRotV" style="width:44px;text-align:right">${Math.round(it.rot || 0)}°</span><button class="icon-btn" id="aRot" title="Roter 90°" aria-label="Roter 90 grader"><svg class="i"><use href="#ic-rot"/></svg></button></div></div>`;
+  if (!c.struct && !c.fixt && !c.note && !c.stair && it.kind !== "rail") h += `<div class="field"><span>Farge</span><div class="swatches">${SWATCHES.map(s => `<button data-c="${s || ""}" aria-pressed="${(it.color || null) === s}" title="${s ? "Farge" : "Standard"}" aria-label="${s ? "Farge " + s : "Standardfarge"}" style="background:${s || "linear-gradient(135deg,var(--panel) 45%,var(--line-2) 45% 55%,var(--panel) 55%)"}"></button>`).join("")}</div></div>`;
+  if (seats || bar) h += `<div class="stats">${seats ? `<div class="stat"><b>${seats}</b><span>sitteplasser</span></div>` : ""}${bar ? `<div class="stat"><b>${fmt(bar, 1)} m</b><span>barfront</span></div>` : ""}</div>`;
+  const z = itemBaseZ(it); if (z > 0.01 && !c.stair) h += `<p class="note">Står på et nivå ${fmt(z)} m over hovedgulvet.</p>`;
+  if (c.struct) h += `<p class="warn">Søyler og pilastre er trolig bærende. Flytting eller fjerning må avklares med arkitekt eller konstruktør.</p>`;
+  if (it.note) h += `<p class="note">${esc(it.note)}</p>`;
+  h += `<label class="field"><span>Kommentar til arkitekten</span><textarea id="fMemo" placeholder="F.eks. «Ønsker lys stein på toppen»">${esc(it.memo || "")}</textarea></label>`;
+  h += `<div class="actions">`;
+  if (it.st === "demo") h += `<button class="btn" id="aRestore">Gjenopprett</button>`;
+  else {
+    if (!it.lock) h += `<button class="btn" id="aDup"><svg class="i"><use href="#ic-copy"/></svg>Dupliser</button><button class="btn danger" id="aDel"><svg class="i"><use href="#ic-trash"/></svg>${it.st === "ex" ? (it.fixed || c.struct || c.stair ? "Riv" : "Fjern") : "Slett"}</button>`;
+    h += `<button class="btn ghost" id="aLock"><svg class="i"><use href="#ic-lock"/></svg>${it.lock ? "Lås opp" : "Lås"}</button>`;
+  }
+  h += `</div>`;
+  return `<h1>${esc(it.name || c.n)}</h1>` + h;
+}
+function wallPane(w) {
+  const { L } = wallGeom(w);
+  let h = `<h1>${w.st === "new" ? "Ny vegg" : w.ext ? "Yttervegg" : "Vegg"}</h1><div class="row wrap">${statusPill(w)}</div>`;
+  if (w.st === "demo") return h + `<p class="note">Veggen er markert som revet. Den vises stiplet på tegningen og tas ikke med i 3D.</p><div class="actions"><button class="btn" id="aRestore">Gjenopprett veggen</button></div>`;
+  h += `<div class="row">${num("wL", "Lengde", L)}<label class="field"><span>Tykkelse</span><select id="wT">${[[0.07, "7 cm · glass/lett"], [0.1, "10 cm · lettvegg"], [0.12, "12 cm"], [0.15, "15 cm"], [0.2, "20 cm · mur"]].map(([v, t]) => `<option value="${v}" ${Math.abs(v - w.t) < 0.005 ? "selected" : ""}>${t}</option>`).join("")}${[0.07, 0.1, 0.12, 0.15, 0.2].some(v => Math.abs(v - w.t) < 0.005) ? "" : `<option selected value="${w.t}">${fmt(w.t * 100, 0)} cm</option>`}</select></label></div>`;
+  h += `<div class="row">${num("wH", "Høyde", w.h)}</div>`;
+  if (w.ext) h += `<p class="warn">Dette er en yttervegg. Endringer i fasade og bærende vegger må avklares med arkitekt og konstruktør.</p>`;
+  if (w.st === "ex") h += `<p class="note">Dra veggen eller endepunktene for å flytte den. Da markeres den gamle som revet, og en ny vegg tegnes der du slipper.</p>`;
+  if (w.note) h += `<p class="note">${esc(w.note)}</p>`;
+  h += `<div class="divider"></div><h2 style="font:600 11px var(--font-ui);letter-spacing:.1em;text-transform:uppercase;color:var(--ink-3);margin:0">Dører og vinduer</h2>`;
+  h += `<div class="ops">` + ((w.ops || []).map(o => `<div class="op" style="${selOp && selOp.op === o.id ? "border-color:var(--sel)" : ""}"><b>${{ door: "Dør", double: "Dobbeldør", window: "Vindu", opening: "Åpning" }[o.type]}</b>${num("oW_" + o.id, "Bredde", o.w)}${num("oA_" + o.id, "Fra start", o.at - o.w / 2)}<div style="display:flex;flex-direction:column;gap:2px">${o.type === "door" || o.type === "double" ? `<button class="icon-btn" data-flip="${o.id}" title="Snu dørslag" aria-label="Snu dørslag"><svg class="i"><use href="#ic-rot"/></svg></button>` : ""}<button class="icon-btn" data-delop="${o.id}" title="Fjern" aria-label="Fjern åpning"><svg class="i"><use href="#ic-trash"/></svg></button></div></div>`).join("") || `<p class="note" style="margin:0">Ingen åpninger i denne veggen.</p>`) + `</div>`;
+  h += `<div class="actions"><button class="btn" data-addop="door">+ Dør</button><button class="btn" data-addop="double">+ Dobbeldør</button><button class="btn" data-addop="window">+ Vindu</button><button class="btn" data-addop="opening">+ Åpning</button></div>`;
+  h += `<label class="field"><span>Kommentar til arkitekten</span><textarea id="fMemo" placeholder="F.eks. «Glassvegg her?»">${esc(w.memo || "")}</textarea></label>`;
+  h += `<div class="divider"></div><div class="actions"><button class="btn" id="aDup"><svg class="i"><use href="#ic-copy"/></svg>Dupliser</button><button class="btn danger" id="aDel"><svg class="i"><use href="#ic-trash"/></svg>${w.st === "ex" ? "Riv veggen" : "Slett veggen"}</button></div>`;
+  return h;
+}
+function levelPane(l) {
+  let h = `<h1>${esc(l.name)}</h1><div class="row wrap">${statusPill(l)}</div>`;
+  if (l.st === "demo") return h + `<p class="note">Nivået er markert som fjernet. Gulvet regnes da som hovedgulv.</p><div class="actions"><button class="btn" id="aRestore">Gjenopprett nivået</button></div>`;
+  h += `<div class="row">${num("lZ", "Høyde over hovedgulv", l.z)}</div><div class="stat"><b>${fmt(polyArea(l.poly), 1)} m²</b><span>areal</span></div>`;
+  if (l.note) h += `<p class="note">${esc(l.note)}</p>`;
+  h += `<label class="field"><span>Kommentar til arkitekten</span><textarea id="fMemo">${esc(l.memo || "")}</textarea></label>`;
+  h += `<div class="actions"><button class="btn danger" id="aDel"><svg class="i"><use href="#ic-trash"/></svg>Fjern nivået (senk til hovedgulv)</button></div>`;
+  return h;
+}
+function stats() {
+  const live = S.items.filter(it => it.st !== "demo");
+  const by = f => live.filter(it => it.f === f);
+  const seats = f => by(f).reduce((a, it) => a + seatsOf(it), 0);
+  const bar = f => by(f).reduce((a, it) => a + barOf(it), 0);
+  const tables = f => by(f).filter(it => /^table|^set|booth|highset/.test(it.kind)).reduce((a, it) => a + (it.kind === "booth" ? 1 : 1), 0);
+  const newW = S.walls.filter(w => w.st === "new"), demoW = S.walls.filter(w => w.st === "demo");
+  const sumL = ws => ws.reduce((a, w) => a + wallGeom(w).L, 0);
+  const newItems = S.items.filter(it => it.st === "new" && it.kind !== "dim").length;
+  const demoItems = S.items.filter(it => it.st === "demo").length;
+  return { seats0: seats(0), seats1: seats(1), bar0: bar(0), bar1: bar(1), t0: tables(0), t1: tables(1), newL: sumL(newW), demoL: sumL(demoW), newW: newW.length, demoW: demoW.length, newItems, demoItems };
+}
+function overviewHTML() {
+  const st = stats(); const f = floor;
+  return `<h1>${esc(meta.name || "Uten navn")}</h1><p class="sub">${meta.id ? "Lagret forslag" : "Ikke lagret ennå"}${meta.note ? " · " + esc(meta.note.slice(0, 80)) : ""}</p>
+  <div class="stats">
+    <div class="stat"><b>${st.seats0 + st.seats1}</b><span>sitteplasser totalt</span></div>
+    <div class="stat"><b>${f === 0 ? st.seats0 : st.seats1}</b><span>på ${f === 0 ? "1. etasje" : "mesaninen"}</span></div>
+    <div class="stat"><b>${fmt(st.bar0 + st.bar1, 1)} m</b><span>barfront</span></div>
+    <div class="stat"><b>${st.t0 + st.t1}</b><span>bord og båser</span></div>
+  </div>
+  <p class="note" style="margin-top:-6px">Tallene regner med møbler i planen, uten terrassen. De sier ikke noe om hva lokalet er godkjent for.</p>
+  <h2>Endringer fra dagens lokale</h2>
+  <div class="legend"><span class="sw" style="background:var(--wall-new)"></span><span>${st.newW} nye vegger · ${fmt(st.newL, 1)} m</span>
+  <span class="sw" style="background:repeating-linear-gradient(45deg,var(--wall-demo) 0 2px,transparent 2px 5px);border:1px dashed var(--wall-demo)"></span><span>${st.demoW} vegger revet · ${fmt(st.demoL, 1)} m</span>
+  <span class="sw" style="background:var(--f-seat)"></span><span>${st.newItems} nye elementer · ${st.demoItems} fjernet</span></div>
+  <h2>Visning</h2>
+  <div class="toggles">
+    <label><input type="checkbox" id="tgExisting" ${opts.existing ? "checked" : ""}> Vis dagens møbler</label>
+    <label><input type="checkbox" id="tgDemo" ${opts.demo ? "checked" : ""}> Vis revet og fjernet (stiplet)</label>
+    <label><input type="checkbox" id="tgDims" ${opts.dims ? "checked" : ""}> Vis mål på alle vegger</label>
+    <label><input type="checkbox" id="tgGhost" ${opts.ghost ? "checked" : ""}> Vis 1. etasje under mesaninen</label>
+    <label><input type="checkbox" id="tgSnap" ${opts.snap ? "checked" : ""}> Fest til rutenett (5 cm)</label>
+  </div>
+  <h2>Hurtigvalg</h2>
+  <div class="actions">
+    <button class="btn" id="qClear">Fjern alle løse møbler</button>
+    <button class="btn" id="qBars">Riv dagens barer</button>
+    <button class="btn" id="qStart">Start på nytt …</button>
+  </div>
+  <h2>Tegnforklaring</h2>
+  <div class="legend">
+    <span class="sw" style="background:var(--wall)"></span><span>Eksisterende vegg</span>
+    <span class="sw" style="background:var(--wall-new)"></span><span>Ny vegg</span>
+    <span class="sw" style="background:repeating-linear-gradient(45deg,var(--wall-demo) 0 2px,var(--paper) 2px 5px)"></span><span>Revet eller fjernet</span>
+    <span class="sw" style="background:var(--level)"></span><span>Opphøyd nivå (+ høyde)</span>
+    <span class="sw" style="background:repeating-linear-gradient(-45deg,var(--ink-3) 0 1px,transparent 1px 5px)"></span><span>Åpent ned til 1. etasje</span>
+    <span class="sw" style="height:0;border-top:2px dashed var(--ink-2)"></span><span>Mesaninkant over</span>
+  </div>
+  <p class="note"><b>Om målene.</b> Vegger, dører og nivåer er hentet fra Matterport-skanningen (hovedrommet er 9,34 × 10,16 m) og plantegningen. Veggmål er normalt innenfor ±5 cm. Møbler, bar og søyler er anslått fra 360-bildene. Kontroller mål på stedet før bestilling og bygging.</p>
+  <p class="note"><b>3D-skanningen</b> kan åpnes på <a href="${esc(BASE.source)}" target="_blank" rel="noopener">my.matterport.com</a>.</p>`;
+}
+function bindOverview() {
+  const tg = (id, key) => { const el = $("#" + id); if (el) el.onchange = () => { opts[key] = el.checked; render(); if (view === "3d") schedule3D(); }; };
+  tg("tgExisting", "existing"); tg("tgDemo", "demo"); tg("tgDims", "dims"); tg("tgGhost", "ghost"); tg("tgSnap", "snap");
+  $("#qClear").onclick = clearLoose; $("#qBars").onclick = demolishBars; $("#qStart").onclick = () => openProposals("start");
+}
+function bindPane(id) {
+  const it = findItem(id), w = findWall(id), l = findLevel(id); const o = it || w || l;
+  const onNum = (sel_, fn) => { const el = $(sel_); if (!el) return; el.addEventListener("change", () => { const v = parseNum(el.value); if (v == null) { updatePane(); return; } const before = snapshotBefore(); fn(v); pushPast(before); afterChange(); }); el.addEventListener("keydown", e => { if (e.key === "ArrowUp" || e.key === "ArrowDown") { e.preventDefault(); const v = (parseNum(el.value) || 0) + (e.key === "ArrowUp" ? 1 : -1) * (+el.dataset.step || 0.05) * (e.shiftKey ? 10 : 1); el.value = fmt(v); el.dispatchEvent(new Event("change")); } }); };
+  const bindBtn = (s, fn) => { const b = $(s); if (b) b.onclick = fn; };
+  bindBtn("#aDel", deleteSel); bindBtn("#aDup", duplicateSel); bindBtn("#aRestore", () => restore(id));
+  bindBtn("#aLock", () => { const before = snapshotBefore(); o.lock = !o.lock; pushPast(before); afterChange(); });
+  const memo = $("#fMemo"); if (memo) memo.addEventListener("change", () => { const before = snapshotBefore(); o.memo = memo.value.slice(0, 1000); pushPast(before); });
+  if (it) {
+    const nm = $("#fName"); if (nm) nm.addEventListener("change", () => { const before = snapshotBefore(); it.name = nm.value.slice(0, 80); pushPast(before); afterChange(); });
+    const lb = $("#fLabel"); if (lb) { lb.addEventListener("input", () => { it.label = lb.value.slice(0, 60); render(); }); lb.addEventListener("change", () => { pushPast(snapshotBefore()); }); }
+    onNum("#fW", v => { it.w = clamp(v, 0.05, 30); if (kindOf(it).round) it.d = it.w; });
+    onNum("#fD", v => it.d = clamp(v, 0.03, 30));
+    onNum("#fH", v => it.h = clamp(v, 0, 8));
+    const stp = $("#fSteps"); if (stp) stp.addEventListener("change", () => { const v = parseInt(stp.value, 10); if (v > 0 && v < 40) { const before = snapshotBefore(); it.steps = v; pushPast(before); afterChange(); } });
+    const rot = $("#fRot"); if (rot) { let b0 = null; rot.addEventListener("pointerdown", () => b0 = snapshotBefore()); rot.addEventListener("input", () => { it.rot = +rot.value; $("#fRotV").textContent = rot.value + "°"; render(); }); rot.addEventListener("change", () => { pushPast(b0 || snapshotBefore()); b0 = null; if (view === "3d") schedule3D(); }); }
+    bindBtn("#aRot", () => rotateSel(90));
+    $$(".swatches button").forEach(b => b.onclick = () => { const before = snapshotBefore(); it.color = b.dataset.c || undefined; if (!it.color) delete it.color; pushPast(before); afterChange(); });
+  }
+  if (w) {
+    onNum("#wL", v => { const g = ensureEditableWall(w); const { u } = wallGeom(g); g.b = [r2(g.a[0] + u[0] * v), r2(g.a[1] + u[1] * v)]; (g.ops || []).forEach(op => op.at = clamp(op.at, op.w / 2, v - op.w / 2)); });
+    const t = $("#wT"); if (t) t.onchange = () => { const before = snapshotBefore(); const g = ensureEditableWall(w); g.t = +t.value; pushPast(before); afterChange(); };
+    onNum("#wH", v => { const g = ensureEditableWall(w); g.h = clamp(v, 0.3, 6); });
+    (w.ops || []).forEach(op => {
+      onNum("#oW_" + op.id, v => { const g = ensureEditableWall(w); const idx = w.ops.indexOf(op); const oo = g.ops[idx]; const { L } = wallGeom(g); oo.w = clamp(v, 0.3, L); oo.at = clamp(oo.at, oo.w / 2, L - oo.w / 2); });
+      onNum("#oA_" + op.id, v => { const g = ensureEditableWall(w); const idx = w.ops.indexOf(op); const oo = g.ops[idx]; const { L } = wallGeom(g); oo.at = clamp(v + oo.w / 2, oo.w / 2, L - oo.w / 2); });
+    });
+    $$("[data-flip]").forEach(b => b.onclick = () => { const before = snapshotBefore(); const g = ensureEditableWall(w); const idx = w.ops.findIndex(x => x.id === b.dataset.flip); const oo = g.ops[idx]; oo.flip = ((oo.flip || 0) + 1) % 4; pushPast(before); afterChange(); });
+    $$("[data-delop]").forEach(b => b.onclick = () => { const before = snapshotBefore(); const g = ensureEditableWall(w); const idx = w.ops.findIndex(x => x.id === b.dataset.delop); g.ops.splice(idx, 1); selOp = null; pushPast(before); afterChange(); });
+    $$("[data-addop]").forEach(b => b.onclick = () => {
+      const before = snapshotBefore(); const g = ensureEditableWall(w); const { L } = wallGeom(g); const type = b.dataset.addop;
+      const ow = type === "double" ? 1.6 : type === "window" ? 1.2 : type === "opening" ? 1.2 : 0.9; if (L < ow + 0.1) { toast("Veggen er for kort til denne åpningen."); return; }
+      // find free spot: centre, else first gap
+      let at = L / 2; const taken = (g.ops || []).map(o => [o.at - o.w / 2 - 0.05, o.at + o.w / 2 + 0.05]);
+      const free = x => taken.every(([a, b2]) => x + ow / 2 < a || x - ow / 2 > b2);
+      if (!free(at)) { for (let x = ow / 2 + 0.1; x < L - ow / 2; x += 0.05) if (free(x)) { at = x; break; } }
+      const op = { id: uid("o"), type, at: r2(at), w: ow, h: type === "window" ? 1.3 : 2.1, sill: type === "window" ? 0.9 : 0 };
+      g.ops = g.ops || []; g.ops.push(op); selOp = { wall: g.id, op: op.id }; pushPast(before); afterChange(); toast("Dra den blå firkanten langs veggen for å flytte åpningen.");
+    });
+  }
+  if (l) onNum("#lZ", v => l.z = clamp(v, 0, 2));
+}
+
+/* ===================== Title / sheets ===================== */
+function updateTitle() { $("#pname").textContent = "· " + (meta.name || "Uten navn") + (dirty && meta.id ? " (endret)" : ""); }
+const isPhone = () => matchMedia("(max-width: 860px)").matches;
+function closeSheets() { $("#left").dataset.open = "false"; $("#right").dataset.open = "false"; $$(".mtabs button").forEach(b => b.setAttribute("aria-pressed", "false")); }
+$("#mtabs").addEventListener("click", e => {
+  const b = e.target.closest("button"); if (!b) return; const m = b.dataset.m; const was = b.getAttribute("aria-pressed") === "true"; closeSheets(); if (was) return;
+  b.setAttribute("aria-pressed", "true");
+  if (m === "lib" || m === "tools") { $("#left").dataset.open = "true"; $(".tools").hidden = m !== "tools"; $(".lib-head").hidden = m !== "lib"; $("#lib").hidden = m !== "lib"; }
+  else { if (m === "layers") { sel = []; updatePane(); render(); } $("#right").dataset.open = "true"; }
+});
+
+/* ===================== Dialogs ===================== */
+function dialog(title, bodyHTML, { wide } = {}) {
+  const d = $("#dialogs"); d.innerHTML = `<div class="scrim" id="scrim"><div class="dialog" role="dialog" aria-modal="true" aria-label="${esc(title)}" style="${wide ? "width:min(860px,100%)" : ""}"><header><h2>${esc(title)}</h2><button class="icon-btn" id="dClose" aria-label="Lukk"><svg class="i"><use href="#ic-close"/></svg></button></header><div class="body">${bodyHTML}</div></div></div>`;
+  $("#dClose").onclick = closeDialog; $("#scrim").addEventListener("pointerdown", e => { if (e.target.id === "scrim") closeDialog(); });
+  return d;
+}
+function closeDialog() { $("#dialogs").innerHTML = ""; if (unsubList) { unsubList(); unsubList = null; } }
+function openHelp() {
+  dialog("Slik bruker du romverkstedet", `
+  <div class="help-grid">
+    <div><b>1 · Se lokalet</b><p>Bytt mellom 1. etasje og mesanin øverst. «3D» viser rommet i perspektiv. Dra for å dreie, rull eller klyp for å zoome.</p></div>
+    <div><b>2 · Møbler og bar</b><p>Dra noe fra «Legg til» inn i tegningen, eller klikk og så i tegningen. Klikk et element for å endre mål, farge og rotasjon.</p></div>
+    <div><b>3 · Vegger</b><p>Klikk en vegg og velg «Riv veggen», eller dra den til et nytt sted. Med «Vegg»-verktøyet tegner du nye vegger klikk for klikk.</p></div>
+    <div><b>4 · Del forslaget</b><p>Trykk «Lagre» og gi forslaget et navn. Alle med tilgang til siden ser det under «Forslag». Du kan også laste ned bilde eller møbelliste.</p></div>
+  </div>
+  <h3>Hurtigtaster</h3>
+  <div class="keys">
+    <kbd>V</kbd><span>Velg og flytt</span><kbd>W</kbd><span>Tegn vegg. Skriv et tall mens du tegner for nøyaktig lengde</span>
+    <kbd>M</kbd><span>Mål avstand</span><kbd>R</kbd><span>Roter 90° (Shift+R motsatt vei)</span>
+    <kbd>Delete</kbd><span>Fjern valgte</span><kbd>Ctrl+D</kbd><span>Dupliser</span>
+    <kbd>Ctrl+Z</kbd><span>Angre (Ctrl+Y gjør om)</span><kbd>Piltaster</kbd><span>Flytt 5 cm (med Shift 50 cm)</span>
+    <kbd>Shift</kbd><span>Klikk for å velge flere · roter fritt uten 15°-trinn</span><kbd>Mellomrom</kbd><span>Hold inne og dra for å flytte tegningen</span>
+    <kbd>1</kbd><span>1. etasje · <kbd>2</kbd> Mesanin · <kbd>0</kbd> Vis alt</span>
+  </div>
+  <p class="note"><b>Nøyaktighet.</b> Vegger, dører, vinduer, nivåer og trapp er hentet fra Matterport-skanningen og plantegningen. Dagens møbler, bar og to av søylene er anslått fra 360-bildene. Verktøyet er et skisseverktøy for idéfasen. Bæring, brann, rømning og tekniske krav må vurderes av arkitekt og rådgivere.</p>`);
+}
+/* ----- Proposals (shared db) ----- */
+let DB = null, USER = null, DL = null, myId = null, canWrite = null, unsubList = null, proposals = [];
+async function initCaps() {
+  if (!window.claude || !window.claude.use) return;
+  try { DB = await window.claude.use("db"); } catch { DB = null; }
+  try { USER = await window.claude.use("user"); } catch { USER = null; }
+  try { DL = await window.claude.use("downloads"); } catch { DL = null; }
+  if (USER) { try { myId = await USER.id(); } catch { } try { canWrite = await USER.can("data.write"); } catch { canWrite = null; } }
+}
+function thumbSVG(st, f = 0) {
+  let s = ""; const saveS = S; S = st;
+  const k = 1;
+  S.walls.filter(w => w.f === f && w.st !== "demo").forEach(w => wallPieces(w, wallJoinExt(w, S.walls.filter(x => x.f === f && x.st !== "demo"))).forEach(p => s += `<polygon points="${p.map(q => q[0].toFixed(2) + "," + q[1].toFixed(2)).join(" ")}" fill="#2A2530"/>`));
+  S.items.filter(it => it.f === f && it.st !== "demo" && it.kind !== "dim" && !kindOf(it).note).forEach(it => { const c = kindOf(it); const fill = c.g === "bar" ? "#C79B6B" : c.g === "seat" ? "#9A7390" : c.zone ? "none" : c.struct ? "#2A2530" : "#B8B0A6"; s += `<polygon points="${corners(it).map(q => q[0].toFixed(2) + "," + q[1].toFixed(2)).join(" ")}" fill="${it.color || fill}" ${c.zone ? 'stroke="#A83D66" stroke-width="0.06"' : ""}/>`; });
+  S = saveS;
+  return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="1.4 0.5 12.4 11.1"><rect x="1.4" y="0.5" width="12.4" height="11.1" fill="#FBFAF9"/>${s}</svg>`;
+}
+function fmtDate(iso) { try { const d = new Date(iso); return d.toLocaleDateString("nb-NO", { day: "numeric", month: "short" }) + " kl. " + d.toLocaleTimeString("nb-NO", { hour: "2-digit", minute: "2-digit" }); } catch { return ""; } }
+async function namesFor(ids) { if (!USER || !ids.length) return {}; try { return await USER.profiles(ids); } catch { return {}; } }
+function openProposals(focus) {
+  const dbOk = !!DB;
+  const body = `
+  <div class="field"><span>Navn på forslaget</span><input id="pName" value="${esc(meta.name || "")}" placeholder="F.eks. «Åpen bar og pop-up-kjøkken»" maxlength="80"></div>
+  <label class="field"><span>Kort beskrivelse (valgfritt)</span><textarea id="pNote" maxlength="600" placeholder="Hva er tanken med dette forslaget?">${esc(meta.note || "")}</textarea></label>
+  <div class="actions">${dbOk ? `${meta.id ? `<button class="btn primary" id="pUpdate">Lagre endringer</button><button class="btn" id="pNew">Lagre som nytt forslag</button>` : `<button class="btn primary" id="pNew">Lagre forslaget</button>`}` : ""}<button class="btn" id="pFile">Last ned som planfil</button></div>
+  ${dbOk ? "" : window.claude ? `<p class="note">Delte forslag lagres på denne siden når du åpner den innlogget på claude.ai med tilgang til å endre. Her kan du laste ned planfilen og sende den videre i stedet. Arbeidet ditt lagres også midlertidig i denne nettleseren.</p>` : `<p class="note">På denne nettsiden deles forslag som planfiler. Last ned planfilen og send den til de andre. De åpner den med <b>Eksporter → Åpne planfil</b>. Arbeidet ditt lagres også automatisk i denne nettleseren.</p>`}
+  <div class="divider"></div>
+  <h3>Lagrede forslag</h3>
+  <div class="plist" id="plist">${dbOk ? `<div class="empty">Henter forslag …</div>` : `<div class="empty">${window.claude ? "Delte forslag er ikke tilgjengelige i denne visningen." : "Felles lagring finnes bare i claude.ai-versjonen. Bruk planfiler for å dele."} <button class="btn" id="pImport" style="margin-top:8px">Åpne planfil …</button></div>`}</div>
+  <div class="divider"></div>
+  <h3 id="startHead">Start fra</h3>
+  <div class="starts">
+    <button class="start" data-start="today"><b>Dagens lokale</b><span>Slik lokalet ser ut i skanningen, med dagens møbler.</span></button>
+    <button class="start" data-start="noloose"><b>Uten løse møbler</b><span>Beholder bar, benker og bygningsdeler.</span></button>
+    <button class="start" data-start="shell"><b>Tomt skall</b><span>Kun vegger, søyler, trapper og nivåer. Barene er revet.</span></button>
+    <button class="start" data-start="example"><b>Eksempel</b><span>Et forslag til inspirasjon: kortere bar, pop-up-kjøkken og scene.</span></button>
+  </div>`;
+  dialog("Forslag", body, { wide: true });
+  const nm = () => ($("#pName").value.trim() || "Uten navn").slice(0, 80), nt = () => $("#pNote").value.trim().slice(0, 600);
+  if ($("#pNew")) $("#pNew").onclick = () => saveProposal(true, nm(), nt());
+  if ($("#pUpdate")) $("#pUpdate").onclick = () => saveProposal(false, nm(), nt());
+  $("#pFile").onclick = () => { meta.name = nm(); meta.note = nt(); exportAs("json"); };
+  $$("[data-start]").forEach(b => b.onclick = () => startFrom(b.dataset.start));
+  if ($("#pImport")) $("#pImport").onclick = () => { closeDialog(); $("#fileIn").click(); };
+  if (focus === "start") $("#startHead").scrollIntoView({ block: "center" }); else setTimeout(() => $("#pName").focus(), 30);
+  if (dbOk) listProposals();
+}
+function listProposals() {
+  try {
+    unsubList = DB.collection("forslag").orderBy("updated", "desc").limit(100).onSnapshot(async snap => {
+      proposals = snap.docs.map(d => { const x = d.data() || {}; return { id: d.id, name: String(x.name || "Uten navn").slice(0, 80), note: String(x.note || "").slice(0, 600), by: typeof x.by === "string" ? x.by : null, updated: String(x.updated || ""), plan: sanitizePlan(x.plan) }; });
+      const box = $("#plist"); if (!box) return;
+      if (!proposals.length) { box.innerHTML = `<div class="empty">Ingen forslag er lagret ennå. Gi arbeidet ditt et navn over og trykk «Lagre forslaget».</div>`; return; }
+      const names = await namesFor([...new Set(proposals.map(p => p.by).filter(Boolean))]);
+      box.innerHTML = proposals.map(p => `<div class="pcard" data-pid="${esc(p.id)}"><div class="thumb">${p.plan ? thumbSVG(p.plan, 0) : ""}</div><div style="min-width:0"><b>${esc(p.name || "Uten navn")}${p.id === meta.id ? ` <span class="pill new" style="margin-left:4px">Åpen nå</span>` : ""}</b><span>${esc((p.by && names[p.by] && names[p.by].name) || "Noen")} · ${esc(fmtDate(p.updated))}</span>${p.note ? `<span style="display:block;margin-top:2px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${esc(p.note)}</span>` : ""}</div><div class="acts"><button class="btn" data-popen="${esc(p.id)}">Åpne</button><button class="btn ghost danger" data-pdel="${esc(p.id)}" aria-label="Slett forslaget">Slett</button></div></div>`).join("");
+      $$("[data-popen]", box).forEach(b => b.onclick = () => openProposal(b.dataset.popen));
+      $$("[data-pdel]", box).forEach(b => b.onclick = () => { if (b.dataset.armed) { deleteProposal(b.dataset.pdel); } else { b.dataset.armed = "1"; b.textContent = "Bekreft sletting"; b.classList.remove("ghost"); setTimeout(() => { if (b.isConnected) { delete b.dataset.armed; b.textContent = "Slett"; b.classList.add("ghost"); } }, 4000); } });
+    }, err => { const box = $("#plist"); if (box) box.innerHTML = `<div class="empty">Kunne ikke hente forslagene (${esc(err.code)}). Prøv å laste siden på nytt.</div>`; });
+  } catch (e) { const box = $("#plist"); if (box) box.innerHTML = `<div class="empty">Kunne ikke hente forslagene.</div>`; }
+}
+function planPayload() { return { v: 1, walls: S.walls, items: S.items, levels: S.levels }; }
+async function saveProposal(asNew, name, note) {
+  meta.name = name; meta.note = note;
+  if (!DB) { exportAs("json"); return; }
+  const doc = { name, note, plan: planPayload(), updated: new Date().toISOString() };
+  if (myId) doc.by = myId;
+  try {
+    if (asNew || !meta.id) { doc.created = doc.updated; const ref = DB.collection("forslag").doc(uid("p")); await ref.set(doc); meta.id = ref.id; }
+    else { await DB.doc("forslag/" + meta.id).set(doc); }
+    dirty = false; updateTitle(); saveDraftSoon(); toast(`Lagret «${name}». Andre med tilgang ser det under Forslag.`); updatePane();
+    if ($("#plist")) { } else closeDialog();
+  } catch (e) {
+    const code = e && e.code;
+    if (code === "invalid_argument") toast("Du har bare lesetilgang til denne siden. Last ned planfilen i stedet, eller be eieren om å gi deg tilgang til å endre.");
+    else if (code === "quota_exceeded") toast("Det er ikke plass til flere forslag. Slett noen gamle først.");
+    else toast("Lagringen mislyktes. Prøv igjen om litt.");
+  }
+}
+function quickSave() { if (DB && meta.id) saveProposal(false, meta.name, meta.note); else openProposals(); }
+async function openProposal(pid) {
+  const p = proposals.find(x => x.id === pid); if (!p || !p.plan || !Array.isArray(p.plan.walls)) { toast("Forslaget kunne ikke åpnes."); return; }
+  const before = snapshotBefore(); S = clone(p.plan); pushPast(before);
+  meta = { id: pid, name: p.name || "Uten navn", note: p.note || "", by: p.by || null }; dirty = false; sel = []; closeDialog(); afterChange(); fit(); toast(`Åpnet «${meta.name}»`);
+}
+async function deleteProposal(pid) { try { await DB.doc("forslag/" + pid).delete(); if (meta.id === pid) { meta.id = null; updateTitle(); } toast("Forslaget er slettet"); } catch (e) { toast(e && e.code === "invalid_argument" ? "Du har ikke tilgang til å slette forslag her." : "Slettingen mislyktes."); } }
+function startFrom(kind) {
+  const before = snapshotBefore(); S = baseState();
+  if (kind === "noloose" || kind === "shell" || kind === "example") S.items = S.items.filter(it => !(it.st === "ex" && isLoose(it)));
+  if (kind === "shell" || kind === "example") S.items.forEach(it => { if (it.st === "ex" && (c_isBar(it) || it.kind === "banquette" || it.kind === "booth" || it.kind === "fridge")) it.st = "demo"; });
+  if (kind === "example") buildExample();
+  pushPast(before);
+  meta = { id: null, name: { today: "Dagens lokale", noloose: "Uten løse møbler", shell: "Tomt skall", example: "Eksempel – åpen bar" }[kind], note: kind === "example" ? "Eksempel laget som inspirasjon. Juster fritt." : "", by: null };
+  sel = []; closeDialog(); afterChange(); fit(); toast(`Startet fra «${meta.name}»`);
+}
+function buildExample() {
+  const add = (kind, f, x, y, o = {}) => { const c = CAT[kind]; const it = Object.assign({ id: uid("n"), kind, f, x, y, w: c.w, d: c.d, h: c.h, rot: 0, st: "new" }, o); if (c.label && !it.label) it.label = c.label; if (c.z0 && it.z0 == null) it.z0 = c.z0; if (c.steps && !it.steps) it.steps = c.steps; S.items.push(it); return it; };
+  // Hovedbar: kortere og rett, i dagens tekniske sone, med 1,1 m arbeidsgang
+  add("backbar", 0, 4.42, 6.45, { w: 2.6, rot: 90, name: "Ny bakbar" });
+  add("bar_straight", 0, 5.95, 6.45, { w: 2.6, rot: 90, name: "Ny hovedbar" });
+  [5.45, 6.1, 6.75, 7.4].forEach(y => add("stool", 0, 6.7, y));
+  // Gjestekjøkken / pop-up ved lagerdøren (kjøkkenforbindelse)
+  add("popup", 0, 4.55, 9.95, { w: 2.0, rot: 90, name: "Pop-up matdisk" });
+  add("sign", 0, 4.12, 9.95, { w: 1.8, rot: 90, name: "Skilt for gjestekjøkken" });
+  add("zone", 0, 5.4, 9.95, { w: 1.3, d: 2.3, label: "Gjestekjøkken", name: "Sone: gjestekjøkken" });
+  // Sitteplasser på hovedgulvet
+  add("set4", 0, 8.1, 6.2); add("set4", 0, 8.1, 8.35);
+  add("set2", 0, 9.75, 6.2); add("set2", 0, 9.75, 8.35);
+  // Opphøyd sone og podium
+  add("booth", 0, 8.65, 1.95, { rot: 90 }); add("set2", 0, 10.0, 2.0);
+  add("highset", 0, 11.5, 1.95); add("highset", 0, 11.5, 3.8);
+  add("stage", 0, 12.6, 6.3, { w: 1.6, d: 2.4, h: 0.3, name: "Scene ved vinduet" });
+  // Mesanin: lounge, bord og ny øvre bar
+  add("sofa", 1, 1.6, 6.3, { w: 2.4 }); add("sofa", 1, 1.6, 8.7, { w: 2.4, rot: 180 }); add("table_rect", 1, 1.6, 7.5);
+  add("set4", 1, 4.7, 6.5, { rot: 90 }); add("set4", 1, 6.9, 6.5, { rot: 90 });
+  add("highset", 1, 8.9, 5.3);
+  add("bar_straight", 1, 3.6, 9.9, { w: 3.0, name: "Ny øvre bar" }); add("backbar", 1, 3.6, 10.85, { w: 3.0, rot: 180, name: "Bakbar øvre bar" });
+}
+
+/* ===================== Export ===================== */
+function planStandaloneSVG(f, withTitle = true) {
+  const b = floorBounds(f); const x0 = b.x0 - 0.6, y0 = b.y0 - (withTitle ? 1.4 : 0.6), x1 = (f === 0 ? Math.min(b.x1, 19.2) : b.x1) + 0.6, y1 = b.y1 + 0.9;
+  const cs = getComputedStyle(document.documentElement);
+  const vars = ["--font-ui", "--font-num", "--paper", "--floor", "--floor-2", "--patio", "--level", "--wall", "--wall-new", "--wall-demo", "--wall-ghost", "--ink", "--ink-2", "--ink-3", "--panel", "--accent", "--f-bar", "--f-bar-top", "--f-seat", "--f-seat-2", "--f-table", "--f-stage", "--f-equip", "--f-fix", "--f-plant", "--f-zone", "--grid", "--grid-major", "--sel", "--line-2"].map(v => `${v}:${cs.getPropertyValue(v).trim()}`).join(";");
+  const styleEls = [...document.styleSheets].flatMap(ss => { try { return [...ss.cssRules].map(r => r.cssText).filter(t => /^\.(pl-|it-|is-demo|demo-item|coll|plan-item)/.test(t)); } catch { return []; } }).join("\n");
+  const saveK = V.k; V.k = 60; const saveSel = sel; sel = []; const saveG = opts.ghost; opts.ghost = false;
+  const body = planSVG(f, true); V.k = saveK; sel = saveSel; opts.ghost = saveG;
+  const title = withTitle ? `<text x="${x0 + 0.4}" y="${y0 + 0.65}" font-size="0.42" style="font-family:'Bricolage Grotesque',Arial,sans-serif;font-weight:700;fill:var(--ink)">Barmuda · ${esc(meta.name || "")}</text><text x="${x0 + 0.4}" y="${y0 + 1.05}" font-size="0.2" style="font-family:'IBM Plex Sans',Arial,sans-serif;fill:var(--ink-2)">${f === 0 ? "1. etasje" : "Mesanin"} · Skisse fra Barmuda Romverksted · ${new Date().toLocaleDateString("nb-NO")} · mål i meter, kontrolleres på stedet</text>` : "";
+  const scalebar = `<g transform="translate(${x1 - 2.6},${y1 - 0.45})"><rect width="2" height="0.07" style="fill:var(--ink)"/><rect width="1" height="0.07" style="fill:var(--paper);stroke:var(--ink);stroke-width:0.02"/><text x="0" y="-0.1" font-size="0.16" style="font-family:'IBM Plex Mono',monospace;fill:var(--ink)">0</text><text x="2" y="-0.1" font-size="0.16" text-anchor="end" style="font-family:'IBM Plex Mono',monospace;fill:var(--ink)">2 m</text></g>`;
+  return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="${x0} ${y0} ${x1 - x0} ${y1 - y0}" width="${Math.round((x1 - x0) * 100)}" height="${Math.round((y1 - y0) * 100)}" style="${vars}"><style>${styleEls} .content *{vector-effect:non-scaling-stroke} text{font-family:'IBM Plex Sans',Arial,sans-serif}</style>${renderDefs().replace(/stroke-width:[0-9.e-]+/g, m => m)}<rect x="${x0}" y="${y0}" width="${x1 - x0}" height="${y1 - y0}" style="fill:var(--paper)"/>${title}<g class="content">${body}</g>${scalebar}</svg>`;
+}
+function svgToPng(svgStr, scale = 1) {
+  return new Promise((res, rej) => {
+    const img = new Image(); const url = "data:image/svg+xml;charset=utf-8," + encodeURIComponent(svgStr);
+    img.onload = () => { const c = document.createElement("canvas"); c.width = img.width * scale; c.height = img.height * scale; const g = c.getContext("2d"); g.drawImage(img, 0, 0, c.width, c.height); c.toBlob(b => b ? res(b) : rej(new Error("png")), "image/png"); };
+    img.onerror = rej; img.src = url;
+  });
+}
+async function saveFile(filename, data) {
+  if (!DL && !window.claude) { // opened as a local file: normal browser download
+    try { const blob = data instanceof Blob ? data : new Blob([data], { type: filename.endsWith(".json") ? "application/json" : filename.endsWith(".svg") ? "image/svg+xml" : "text/plain" }); const url = URL.createObjectURL(blob); const el = document.createElement("a"); el.href = url; el.download = filename; document.body.appendChild(el); el.click(); el.remove(); setTimeout(() => URL.revokeObjectURL(url), 4000); return true; } catch { }
+  }
+  if (!DL) { toast("Nedlasting er ikke tilgjengelig i denne visningen. Åpne siden i claude.ai for å laste ned."); return false; }
+  try { await DL.save({ filename, data }); return true; } catch (e) { if (e && e.code === "declined") return false; toast(e && e.code === "rate_limited" ? "Vent litt og prøv igjen." : "Kunne ikke lagre filen."); return false; }
+}
+const slug = s => (s || "forslag").toLowerCase().replace(/[æ]/g, "ae").replace(/[ø]/g, "o").replace(/[å]/g, "a").replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "").slice(0, 40) || "forslag";
+async function exportAs(kind) {
+  $("#menuExport").hidden = true;
+  const base = "barmuda-" + slug(meta.name);
+  if (kind === "json") return saveFile(base + ".json", JSON.stringify({ app: "barmuda-romverksted", v: 1, name: meta.name, note: meta.note, saved: new Date().toISOString(), plan: planPayload() }, null, 1));
+  if (kind === "svg") return saveFile(base + (floor === 0 ? "-1etg" : "-mesanin") + ".svg", planStandaloneSVG(floor));
+  if (kind === "png") { try { const b = await svgToPng(planStandaloneSVG(floor), 1.2); return saveFile(base + (floor === 0 ? "-1etg" : "-mesanin") + ".png", b); } catch { toast("Kunne ikke lage bildet."); return; } }
+  if (kind === "pngall") {
+    try {
+      const a = planStandaloneSVG(0), b = planStandaloneSVG(1, false);
+      const ia = await loadImg(a), ib = await loadImg(b); const sc = 1.2; const c = document.createElement("canvas"); c.width = (ia.width + ib.width) * sc + 40; c.height = Math.max(ia.height, ib.height) * sc; const g = c.getContext("2d"); g.fillStyle = getComputedStyle(document.documentElement).getPropertyValue("--paper"); g.fillRect(0, 0, c.width, c.height); g.drawImage(ia, 0, 0, ia.width * sc, ia.height * sc); g.drawImage(ib, ia.width * sc + 40, (c.height - ib.height * sc) / 2 + 60, ib.width * sc, ib.height * sc);
+      g.font = "600 28px 'IBM Plex Sans', Arial"; g.fillStyle = getComputedStyle(document.documentElement).getPropertyValue("--ink-2"); g.fillText("Mesanin", ia.width * sc + 80, 80);
+      const blob = await new Promise(r => c.toBlob(r, "image/png")); return saveFile(base + "-begge-etasjer.png", blob);
+    } catch { toast("Kunne ikke lage bildet."); return; }
+  }
+  if (kind === "csv") {
+    const rows = [["Etasje", "Status", "Type", "Navn", "Bredde (m)", "Dybde (m)", "Høyde (m)", "Rotasjon", "X (m)", "Y (m)", "Sitteplasser", "Kommentar"]];
+    S.items.filter(it => it.kind !== "dim").forEach(it => rows.push([it.f === 0 ? "1. etasje" : "Mesanin", { ex: "Eksisterende", new: "Nytt", demo: "Fjernet/revet" }[it.st], kindOf(it).n, it.name || it.label || "", fmt(it.w), fmt(it.d), fmt(it.h || 0), Math.round(it.rot || 0), fmt(it.x), fmt(it.y), seatsOf(it), it.memo || ""]));
+    S.walls.forEach(w => rows.push([w.f === 0 ? "1. etasje" : "Mesanin", { ex: "Eksisterende", new: "Ny", demo: "Revet" }[w.st], "Vegg", w.ext ? "Yttervegg" : "Vegg", fmt(wallGeom(w).L), fmt(w.t), fmt(w.h), "", fmt(w.a[0]) + " → " + fmt(w.b[0]), fmt(w.a[1]) + " → " + fmt(w.b[1]), "", (w.ops || []).map(o => ({ door: "dør", double: "dobbeldør", window: "vindu", opening: "åpning" }[o.type] + " " + fmt(o.w))).join(", ") + (w.memo ? " · " + w.memo : "")]));
+    const csv = "﻿" + rows.map(r => r.map(v => `"${String(v).replace(/"/g, '""')}"`).join(";")).join("\r\n");
+    return saveFile(base + "-liste.csv", csv);
+  }
+  if (kind === "import") { $("#fileIn").click(); }
+}
+function loadImg(svgStr) { return new Promise((res, rej) => { const i = new Image(); i.onload = () => res(i); i.onerror = rej; i.src = "data:image/svg+xml;charset=utf-8," + encodeURIComponent(svgStr); }); }
+$("#fileIn").addEventListener("change", async e => {
+  const f = e.target.files[0]; e.target.value = ""; if (!f) return;
+  try { const d = JSON.parse(await f.text()); const plan = sanitizePlan(d.plan || d); if (!plan) throw 0; const before = snapshotBefore(); S = plan; pushPast(before); meta = { id: null, name: d.name || f.name.replace(/\.json$/i, ""), note: d.note || "", by: null }; sel = []; afterChange(); fit(); toast("Planfilen er åpnet"); }
+  catch { toast("Filen er ikke en planfil fra romverkstedet."); }
+});
+
+/* ===================== 3D ===================== */
+let three = null, t3timer = 0;
+function schedule3D() { clearTimeout(t3timer); t3timer = setTimeout(() => { if (three && view === "3d") three.rebuild(); }, 80); }
+async function open3D() {
+  const box = $("#three");
+  if (three) { three.resize(); three.rebuild(); three.setMezz(floor === 1); return; }
+  box.innerHTML = `<div class="loading3d">Laster 3D-visning …</div>`;
+  try { const mod = await import3D(); three = await mod(box); three.rebuild(); three.setMezz(floor === 1); three.cam(floor === 1 ? "mes" : "over"); }
+  catch (e) { console.error(e); box.innerHTML = `<div class="loading3d">3D-visningen kunne ikke lastes. Sjekk nettforbindelsen og prøv igjen.</div>`; }
+}
+$("#bar3d").addEventListener("click", e => {
+  const b = e.target.closest("button"); if (!b || !three) return;
+  if (b.dataset.cam) three.cam(b.dataset.cam);
+  if (b.id === "tgMezz3d") { const on = b.getAttribute("aria-pressed") !== "true"; b.setAttribute("aria-pressed", on); b.textContent = on ? "Mesanin synlig" : "Mesanin skjult"; three.setMezz(on); }
+  if (b.id === "shot3d") three.shot().then(bl => bl && saveFile("barmuda-" + slug(meta.name) + "-3d.png", bl));
+});
+
+/* ===================== Wiring ===================== */
+svg.addEventListener("pointerdown", onDown);
+svg.addEventListener("pointermove", onMove);
+svg.addEventListener("pointerup", onUp);
+svg.addEventListener("pointercancel", onUp);
+svg.addEventListener("pointerleave", () => { if (place && !libDrag) { ghostPlace = null; render(); } });
+svg.addEventListener("dblclick", e => { if (drawState) finishWall(); else { const hi = hitInfo(e.target); if (hi && hi.t === "item") { const it = findItem(hi.id); if (it && (kindOf(it).note || kindOf(it).zone)) setTimeout(() => { const i = $("#fLabel"); if (i) { i.focus(); i.select(); } if (isPhone()) $("#right").dataset.open = "true"; }, 20); } } });
+svg.addEventListener("contextmenu", e => e.preventDefault());
+svg.addEventListener("wheel", onWheel, { passive: false });
+$$(".tool").forEach(b => b.onclick = () => setTool(b.dataset.tool));
+$("#f0").onclick = () => setFloor(0); $("#f1").onclick = () => setFloor(1);
+$("#vPlan").onclick = () => setView("plan"); $("#v3d").onclick = () => setView("3d");
+$("#undo").onclick = undo; $("#redo").onclick = redo;
+$("#zin").onclick = () => { const r = svg.getBoundingClientRect(); zoomAt(1.3, r.left + r.width / 2, r.top + r.height / 2); };
+$("#zout").onclick = () => { const r = svg.getBoundingClientRect(); zoomAt(1 / 1.3, r.left + r.width / 2, r.top + r.height / 2); };
+$("#zfit").onclick = () => fit();
+$("#btnHelp").onclick = openHelp;
+$("#btnProposals").onclick = () => openProposals();
+$("#btnSave").onclick = quickSave;
+$("#btnExport").onclick = e => { e.stopPropagation(); const m = $("#menuExport"); m.hidden = !m.hidden; };
+document.addEventListener("pointerdown", e => { const m = $("#menuExport"); if (!m.hidden && !e.target.closest("#menuExport") && !e.target.closest("#btnExport")) m.hidden = true; });
+$$("#menuExport [data-exp]").forEach(b => b.onclick = () => exportAs(b.dataset.exp));
+new ResizeObserver(() => { if (view === "plan") { if (!V.fitted) { fit(); V.fitted = true; } else render(); } else if (three) three.resize(); }).observe(stage);
+
+
+function coach() {
+  if (LS.get("barmuda.coach") === "1") return;
+  const el = document.createElement("div"); el.className = "coach"; el.setAttribute("role", "dialog"); el.setAttribute("aria-label", "Velkommen");
+  el.innerHTML = `<h2>Velkommen til romverkstedet for Barmuda</h2><p>Tegningen viser lokalet slik det er i dag, målt opp med 3D-skanning.</p><ol><li>Dra møbler, barer og scener fra venstre inn i tegningen.</li><li>Klikk en vegg for å rive den eller legge inn en dør. Med «Vegg» tegner du nye.</li><li>Trykk «Lagre» for å dele forslaget med de andre.</li></ol><div class="actions" style="justify-content:flex-end"><button class="btn ghost" id="cHelp">Mer hjelp</button><button class="btn primary" id="cGo">Kom i gang</button></div>`;
+  stage.appendChild(el);
+  const done = () => { el.remove(); LS.set("barmuda.coach", "1"); };
+  $("#cGo").onclick = done; $("#cHelp").onclick = () => { done(); openHelp(); };
+}
+
+/* boot */
+(function boot() {
+  const had = loadDraft();
+  buildLib(); updateUndo(); updatePane(); updateTitle();
+  requestAnimationFrame(() => { fit(0); V.fitted = true; });
+  coach();
+  if (had) toast("Fortsetter der du slapp. «Forslag» → «Dagens lokale» starter på nytt.");
+  initCaps().then(() => { updatePane(); });
+  if (window.claude && window.claude.hot) { try { window.claude.hot.snapshot && window.claude.hot.snapshot(() => ({ S, meta, floor })); } catch { } }
+})();
+
+/* ===================== 3D view (three.js, loaded on demand) ===================== */
+async function import3D() {
+  const THREE = await import("three");
+  const { OrbitControls } = await import("three/addons/controls/OrbitControls.js");
+  return box => make3D(THREE, OrbitControls, box);
+}
+async function make3D(THREE, OrbitControls, box) {
+  box.innerHTML = "";
+  const renderer = new THREE.WebGLRenderer({ antialias: true, preserveDrawingBuffer: true });
+  renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
+  renderer.shadowMap.enabled = true; renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+  renderer.outputColorSpace = THREE.SRGBColorSpace; renderer.toneMapping = THREE.ACESFilmicToneMapping; renderer.toneMappingExposure = 1.05;
+  box.appendChild(renderer.domElement);
+  const scene = new THREE.Scene();
+  const camera = new THREE.PerspectiveCamera(50, 1, 0.05, 200);
+  const controls = new OrbitControls(camera, renderer.domElement);
+  controls.enableDamping = true; controls.dampingFactor = 0.12; controls.maxPolarAngle = Math.PI * 0.495; controls.minDistance = 0.8; controls.maxDistance = 60;
+  controls.screenSpacePanning = true;
+  const hemi = new THREE.HemisphereLight(0xfff6ec, 0x3a3040, 1.25); scene.add(hemi);
+  const sun = new THREE.DirectionalLight(0xfff1e0, 1.6); sun.position.set(24, 22, 2); sun.castShadow = true;
+  sun.shadow.mapSize.set(2048, 2048); Object.assign(sun.shadow.camera, { left: -4, right: 24, top: 14, bottom: -14, near: 1, far: 70 }); sun.shadow.bias = -0.0004; sun.shadow.normalBias = 0.02;
+  sun.target.position.set(8, 0, 6); scene.add(sun, sun.target);
+  const fill = new THREE.DirectionalLight(0xe8e4ff, 0.35); fill.position.set(-10, 12, 20); scene.add(fill);
+  let root = new THREE.Group(); scene.add(root);
+  let mezzVisible = true; let mezzGroup = null;
+  const css = v => getComputedStyle(document.documentElement).getPropertyValue(v).trim();
+  const mats = new Map();
+  function mat(color, o = {}) {
+    const key = color + JSON.stringify(o); if (mats.has(key)) return mats.get(key);
+    const m = new THREE.MeshStandardMaterial(Object.assign({ color, roughness: 0.75, metalness: 0.0 }, o)); mats.set(key, m); return m;
+  }
+  function woodTex(base, dark) {
+    const c = document.createElement("canvas"); c.width = 512; c.height = 512; const g = c.getContext("2d");
+    g.fillStyle = base; g.fillRect(0, 0, 512, 512);
+    const rows = 16, h = 512 / rows;
+    for (let r = 0; r < rows; r++) { let x = -Math.random() * 200; while (x < 512) { const len = 90 + Math.random() * 150; g.fillStyle = `rgba(${dark},${0.05 + Math.random() * 0.16})`; g.fillRect(x, r * h, len, h); g.fillStyle = `rgba(0,0,0,.18)`; g.fillRect(x, r * h, 1.5, h); x += len; } g.fillStyle = "rgba(0,0,0,.22)"; g.fillRect(0, r * h, 512, 1.2); }
+    const t = new THREE.CanvasTexture(c); t.wrapS = t.wrapT = THREE.RepeatWrapping; t.repeat.set(0.45, 0.45); t.colorSpace = THREE.SRGBColorSpace; t.anisotropy = 4; return t;
+  }
+  const floorMat = new THREE.MeshStandardMaterial({ map: woodTex("#6d4a33", "40,22,12"), roughness: 0.7 });
+  const floorMat2 = new THREE.MeshStandardMaterial({ map: woodTex("#6a4834", "40,22,12"), roughness: 0.7 });
+  const COL = { wall: "#EEE9E2", wallNew: "#F0DDE4", wallTop: "#3a3440", bar: "#B98B5E", barTop: "#E9E2D8", seat: "#8E6A86", table: "#D9D1C6", stage: "#5E6975", equip: "#9DAAA3", fix: "#F4F2EF", ink: "#2B2630", plant: "#6E9468", level: "#7A5A43", mosaic: "#A77D6B", metal: "#6B6570", glass: "#BFD8E0", zone: "#C8567E", patio: "#B9B4AA", slabSide: "#2E2A33" };
+
+  function shapeFrom(poly) { const s = new THREE.Shape(); poly.forEach((p, i) => i ? s.lineTo(p[0], -p[1]) : s.moveTo(p[0], -p[1])); s.closePath(); return s; }
+  function flat(poly, y, material, recv = true) { const g = new THREE.ShapeGeometry(shapeFrom(poly)); g.rotateX(-Math.PI / 2); const m = new THREE.Mesh(g, material); m.position.y = y; m.receiveShadow = recv; return m; }
+  function extr(poly, y, depth, materials) { const g = new THREE.ExtrudeGeometry(shapeFrom(poly), { depth, bevelEnabled: false }); g.rotateX(-Math.PI / 2); const m = new THREE.Mesh(g, materials); m.position.y = y; m.castShadow = true; m.receiveShadow = true; return m; }
+  function bx(w, h, d, material, x = 0, y = 0, z = 0) { const m = new THREE.Mesh(new THREE.BoxGeometry(Math.max(w, 0.005), Math.max(h, 0.005), Math.max(d, 0.005)), material); m.position.set(x, y + h / 2, z); m.castShadow = true; m.receiveShadow = true; return m; }
+  function cyl(rt, rb, h, material, x = 0, y = 0, z = 0, seg = 28) { const m = new THREE.Mesh(new THREE.CylinderGeometry(rt, rb, Math.max(h, 0.005), seg), material); m.position.set(x, y + h / 2, z); m.castShadow = true; m.receiveShadow = true; return m; }
+  function ring(ro, ri, h, material, open) { const s = new THREE.Shape(); s.absarc(0, 0, ro, 0, Math.PI * 2, false); const hole = new THREE.Path(); hole.absarc(0, 0, ri, 0, Math.PI * 2, true); s.holes.push(hole); const g = new THREE.ExtrudeGeometry(s, { depth: h, bevelEnabled: false, curveSegments: 40 }); g.rotateX(-Math.PI / 2); const m = new THREE.Mesh(g, material); m.castShadow = m.receiveShadow = true; return m; }
+  function stadiumMesh(w, d, t, h, material) {
+    const r = d / 2, xr = w / 2 - r, xl = -w / 2, ri = r - t; const s = new THREE.Shape();
+    s.moveTo(xl, r); s.lineTo(xr, r); s.absarc(xr, 0, r, Math.PI / 2, -Math.PI / 2, true); s.lineTo(xl, -r); s.lineTo(xl, -r + t); s.lineTo(xr, -r + t); s.absarc(xr, 0, ri, -Math.PI / 2, Math.PI / 2, false); s.lineTo(xl, r - t); s.closePath();
+    const g = new THREE.ExtrudeGeometry(s, { depth: h, bevelEnabled: false, curveSegments: 36 }); g.rotateX(-Math.PI / 2); const m = new THREE.Mesh(g, material); m.castShadow = m.receiveShadow = true; return m;
+  }
+  function chair(g, x, z, rot, seatM, w = 0.44, d = 0.46) { const c = new THREE.Group(); c.add(bx(w, 0.05, d * 0.9, seatM, 0, 0.43, d * 0.05)); c.add(bx(w, 0.42, 0.05, seatM, 0, 0.45, -d / 2 + 0.03)); [[-1, -1], [1, -1], [-1, 1], [1, 1]].forEach(([sx, sz]) => c.add(bx(0.03, 0.43, 0.03, mat(COL.ink), sx * (w / 2 - 0.03), 0, sz * (d / 2 - 0.04)))); c.position.set(x, 0, z); c.rotation.y = -rot * Math.PI / 180; g.add(c); }
+  function tableRound(g, r, h, topM, x = 0, z = 0) { g.add(cyl(r, r, 0.035, topM, x, h - 0.035, z, 36)); g.add(cyl(0.035, 0.035, h - 0.035, mat(COL.ink), x, 0, z, 12)); g.add(cyl(Math.min(0.24, r * 0.6), Math.min(0.26, r * 0.62), 0.03, mat(COL.ink), x, 0, z, 24)); }
+  function tableRect(g, w, d, h, topM, x = 0, z = 0) { g.add(bx(w, 0.035, d, topM, x, h - 0.035, z)); [[-1, -1], [1, -1], [-1, 1], [1, 1]].forEach(([sx, sz]) => g.add(bx(0.04, h - 0.035, 0.04, mat(COL.ink), x + sx * (w / 2 - 0.06), 0, z + sz * (d / 2 - 0.06)))); }
+  function stairs(g, w, d, rise, n, m) { const tread = w / n; for (let i = 0; i < n; i++) { const hh = rise * (i + 1) / n; g.add(bx(tread + 0.002, hh, d, m, -w / 2 + tread * (i + 0.5), 0, 0)); } }
+
+  function itemMesh(it) {
+    const c = CAT[it.kind]; if (!c || c.note || it.kind === "dim") return null;
+    const g = new THREE.Group(); const w = it.w, d = it.d, h = it.h || c.h || 0.8;
+    const col = it.color && /^#[0-9a-f]{6}$/i.test(it.color) ? it.color : null;
+    const seatM = mat(col || COL.seat, { roughness: 0.85 }), barM = mat(col || COL.bar, { roughness: 0.55 }), topM = mat(COL.barTop, { roughness: 0.35 }), tabM = mat(col || COL.table, { roughness: 0.5 }), eqM = mat(col || COL.equip, { roughness: 0.4, metalness: 0.3 }), stM = mat(col || COL.stage, { roughness: 0.8 });
+    switch (it.kind) {
+      case "bar_straight": case "popup": g.add(bx(w, h - 0.05, d, barM)); g.add(bx(w + 0.04, 0.05, d + 0.06, topM, 0, h - 0.05, 0.02)); if (it.kind === "popup") g.add(bx(w * 0.9, 0.04, 0.02, mat("#fff4e8", { emissive: "#ffcf9a", emissiveIntensity: 0.6 }), 0, h * 0.55, d / 2 + 0.011)); break;
+      case "bar_l": g.add(bx(w, h - 0.05, 0.7, barM, 0, 0, -d / 2 + 0.35)); g.add(bx(0.7, h - 0.05, d - 0.7, barM, w / 2 - 0.35, 0, 0.35)); g.add(bx(w + 0.04, 0.05, 0.76, topM, 0, h - 0.05, -d / 2 + 0.35)); g.add(bx(0.76, 0.05, d - 0.7, topM, w / 2 - 0.35, h - 0.05, 0.35)); break;
+      case "bar_u": { const ww = Math.max(w, d / 2 + 0.2), t = Math.min(0.68, d / 2 - 0.05); const body = stadiumMesh(ww, d, t, h - 0.05, barM); g.add(body); const top = stadiumMesh(ww + 0.04, d + 0.06, t + 0.06, 0.05, topM); top.position.y = h - 0.05; g.add(top); const glow = stadiumMesh(ww - 0.02, d - 0.02, 0.02, 0.35, mat("#fff8ef", { emissive: "#ffe2c0", emissiveIntensity: 0.25 })); glow.position.y = 0.4; g.add(glow); break; }
+      case "bar_island": { const r = Math.min(w, d) / 2; const body = ring(r, r - 0.68, h - 0.05, barM); g.add(body); const top = ring(r + 0.03, r - 0.71, 0.05, topM); top.position.y = h - 0.05; g.add(top); break; }
+      case "backbar": { g.add(bx(w, 0.9, d, barM)); g.add(bx(w, h, 0.04, mat(COL.ink), 0, 0, -d / 2 + 0.02)); [1.25, 1.6, 1.95].forEach(y => g.add(bx(w, 0.03, d * 0.55, topM, 0, y, -d / 2 + d * 0.3))); break; }
+      case "sign": g.add(bx(w, h, d, mat("#fff4ec", { emissive: css("--accent") || "#c8567e", emissiveIntensity: 0.55 }))); break;
+      case "service": case "undercounter": case "dishwasher": case "icewell": case "sinkunit": g.add(bx(w, h, d, eqM)); g.add(bx(w + 0.02, 0.03, d + 0.02, mat("#cfd3d4", { metalness: 0.6, roughness: 0.3 }), 0, h - 0.03, 0)); break;
+      case "fridge": g.add(bx(w, h, d, eqM)); g.add(bx(w * 0.86, h * 0.86, 0.01, mat("#dff2ff", { emissive: "#bfe6ff", emissiveIntensity: 0.35, roughness: 0.1 }), 0, h * 0.07, d / 2 + 0.006)); break;
+      case "coffee": case "register": g.add(bx(w, h, d, mat(COL.ink, { metalness: 0.4, roughness: 0.35 }))); break;
+      case "set2": tableRect(g, 0.7, 0.7, 0.75, tabM); chair(g, 0, -d / 2 + 0.24, 0, seatM); chair(g, 0, d / 2 - 0.24, 180, seatM); break;
+      case "set4": tableRect(g, 1.2, 0.8, 0.75, tabM); [-0.3, 0.3].forEach(x => { chair(g, x, -d / 2 + 0.23, 0, seatM); chair(g, x, d / 2 - 0.23, 180, seatM); }); break;
+      case "set6": tableRect(g, 1.8, 0.8, 0.75, tabM); [-0.6, 0, 0.6].forEach(x => { chair(g, x, -d / 2 + 0.23, 0, seatM); chair(g, x, d / 2 - 0.23, 180, seatM); }); break;
+      case "highset": tableRound(g, 0.3, 1.1, tabM); [0, 120, 240].forEach(a => { const s = Math.sin(a * Math.PI / 180), cc = Math.cos(a * Math.PI / 180); const x = 0.48 * s, z = -0.48 * cc; g.add(cyl(0.17, 0.17, 0.05, seatM, x, 0.72, z)); g.add(cyl(0.025, 0.025, 0.72, mat(COL.ink), x, 0, z, 10)); }); break;
+      case "booth": { const bm = seatM; g.add(bx(w, 0.45, 0.5, bm, 0, 0, -d / 2 + 0.25)); g.add(bx(w, 0.6, 0.14, bm, 0, 0.45, -d / 2 + 0.07)); g.add(bx(w, 0.45, 0.5, bm, 0, 0, d / 2 - 0.25)); g.add(bx(w, 0.6, 0.14, bm, 0, 0.45, d / 2 - 0.07)); tableRect(g, w - 0.2, Math.max(0.3, d - 1.1), 0.74, tabM); break; }
+      case "table_round": case "table_high": tableRound(g, Math.min(w, d) / 2, h, tabM); break;
+      case "table_sq": case "table_rect": tableRect(g, w, d, h, tabM); break;
+      case "table_oval": { const t = cyl(0.5, 0.5, 0.035, tabM, 0, h - 0.035, 0, 40); t.scale.set(w, 1, d); g.add(t); g.add(cyl(0.05, 0.05, h - 0.035, mat(COL.ink))); break; }
+      case "chair": chair(g, 0, 0, 0, seatM, w, d); break;
+      case "stool": g.add(cyl(w / 2, w / 2, 0.06, seatM, 0, h - 0.06, 0)); g.add(cyl(0.025, 0.025, h - 0.06, mat(COL.metal, { metalness: 0.7, roughness: 0.3 }), 0, 0, 0, 10)); g.add(cyl(w / 2 - 0.02, w / 2 - 0.02, 0.02, mat(COL.metal, { metalness: 0.7, roughness: 0.3 }), 0, 0.28, 0)); break;
+      case "armchair": g.add(bx(w, 0.42, d, seatM)); g.add(bx(w, 0.4, 0.16, seatM, 0, 0.42, -d / 2 + 0.08)); g.add(bx(0.11, 0.2, d, seatM, -w / 2 + 0.055, 0.42, 0)); g.add(bx(0.11, 0.2, d, seatM, w / 2 - 0.055, 0.42, 0)); break;
+      case "sofa": g.add(bx(w, 0.42, d, seatM)); g.add(bx(w, 0.42, 0.2, seatM, 0, 0.42, -d / 2 + 0.1)); g.add(bx(0.15, 0.2, d, seatM, -w / 2 + 0.075, 0.42, 0)); g.add(bx(0.15, 0.2, d, seatM, w / 2 - 0.075, 0.42, 0)); break;
+      case "banquette": g.add(bx(w, 0.45, d, seatM)); g.add(bx(w, h - 0.45, 0.15, seatM, 0, 0.45, -d / 2 + 0.075)); break;
+      case "stage": case "podium": g.add(bx(w, h, d, it.kind === "podium" ? mat(COL.level, { roughness: 0.7 }) : stM)); break;
+      case "dj": g.add(bx(w, h - 0.05, d, stM)); g.add(bx(w, 0.05, d, mat(COL.ink), 0, h - 0.05, 0)); break;
+      case "dance": case "zone": { const m = new THREE.Mesh(new THREE.PlaneGeometry(w, d), new THREE.MeshStandardMaterial({ color: col || COL.zone, transparent: true, opacity: it.kind === "dance" ? 0.35 : 0.18, emissive: col || COL.zone, emissiveIntensity: 0.15, depthWrite: false })); m.rotation.x = -Math.PI / 2; m.position.y = 0.012; g.add(m); break; }
+      case "speaker": g.add(bx(w, h, d, mat(COL.ink))); break;
+      case "screen": g.add(bx(w, h, d, mat(COL.ink))); g.add(bx(w * 0.95, h * 0.9, 0.005, mat("#1b2733", { emissive: "#3a6f9a", emissiveIntensity: 0.4 }), 0, h * 0.05, d / 2 + 0.003)); break;
+      case "column": g.add(cyl(Math.min(w, d) / 2, Math.min(w, d) / 2, h, mat(COL.mosaic, { roughness: 0.45 }), 0, 0, 0, 24)); break;
+      case "pier": g.add(bx(w, h, d, mat(COL.wall))); break;
+      case "stair": case "steps": { const rise = it.z1 != null ? it.z1 - (it.z0 || 0) : h; stairs(g, w, d, rise, Math.max(1, it.steps || c.steps || 3), mat(it.kind === "stair" ? "#3b3540" : COL.level, { roughness: 0.6 })); break; }
+      case "rail": { g.add(bx(w, 0.04, 0.05, mat(COL.metal, { metalness: 0.6, roughness: 0.35 }), 0, h - 0.04, 0)); const n = Math.max(2, Math.round(w / 0.12)); const bal = new THREE.InstancedMesh(new THREE.BoxGeometry(0.018, h - 0.04, 0.018), mat(COL.ink), n); const M = new THREE.Matrix4(); for (let i = 0; i < n; i++) { M.makeTranslation(-w / 2 + (i + 0.5) * w / n, (h - 0.04) / 2, 0); bal.setMatrixAt(i, M); } g.add(bal); break; }
+      case "partition": g.add(bx(w, h, d, mat(col || COL.ink, { roughness: 0.6 }))); break;
+      case "planter": g.add(bx(w, 0.5, d, mat(COL.ink))); for (let x = -w / 2 + 0.2; x < w / 2 - 0.1; x += 0.3) { const s = new THREE.Mesh(new THREE.IcosahedronGeometry(0.22, 1), mat(COL.plant)); s.position.set(x, 0.72, 0); s.castShadow = true; g.add(s); } break;
+      case "plant": { g.add(cyl(0.16, 0.13, 0.35, mat(COL.ink))); const s = new THREE.Mesh(new THREE.IcosahedronGeometry(Math.min(w, d) / 2, 1), mat(COL.plant)); s.position.y = Math.max(0.6, h - Math.min(w, d) / 2); s.castShadow = true; g.add(s); break; }
+      case "coat": g.add(bx(w, h, d, mat(COL.fix))); break;
+      case "toilet": g.add(bx(w, 0.4, 0.18, mat(COL.fix), 0, 0.35, -d / 2 + 0.09)); { const b = cyl(w / 2 - 0.02, w / 2 - 0.06, 0.4, mat(COL.fix), 0, 0, 0.08); b.scale.z = 1.3; g.add(b); } break;
+      case "urinal": g.add(bx(w, 0.6, d, mat(COL.fix), 0, 0.5, 0)); break;
+      case "basin": g.add(bx(w, 0.12, d, mat(COL.fix), 0, 0.78, 0)); break;
+      default: g.add(bx(w, h, d, eqM));
+    }
+    return g;
+  }
+
+  function wallMeshes(w, grp, baseY, walls) {
+    const { L, u } = wallGeom(w); if (L < 0.01) return;
+    const ext = wallJoinExt(w, walls);
+    const m = mat(w.st === "new" ? COL.wallNew : COL.wall, { roughness: 0.9 });
+    const ang = -Math.atan2(u[1], u[0]);
+    const put = (s0, s1, y0, y1) => { if (s1 - s0 < 0.005 || y1 - y0 < 0.005) return; const mid = (s0 + s1) / 2; const cx = w.a[0] + u[0] * mid, cz = w.a[1] + u[1] * mid; const mesh = bx(s1 - s0, y1 - y0, w.t, m, 0, 0, 0); mesh.position.set(cx, baseY + y0 + (y1 - y0) / 2, cz); mesh.rotation.y = ang; grp.add(mesh); };
+    const ops = (w.ops || []).slice().sort((a, b) => a.at - b.at); let s = -ext[0];
+    ops.forEach(o => { const o0 = o.at - o.w / 2, o1 = o.at + o.w / 2; put(s, o0, 0, w.h); const sill = o.type === "window" ? (o.sill || 0.9) : 0; const top = Math.min(w.h, sill + (o.h || (o.type === "window" ? 1.3 : 2.1))); if (sill > 0) put(o0, o1, 0, sill); put(o0, o1, top, w.h); if (o.type === "window") { const gm = new THREE.Mesh(new THREE.BoxGeometry(o.w, top - sill, 0.02), glassM); gm.position.set(w.a[0] + u[0] * o.at, baseY + sill + (top - sill) / 2, w.a[1] + u[1] * o.at); gm.rotation.y = ang; grp.add(gm); } s = Math.max(s, o1); });
+    put(s, L + ext[1], 0, w.h);
+  }
+  const glassM = new THREE.MeshStandardMaterial({ color: "#cfe5ee", transparent: true, opacity: 0.28, roughness: 0.05, metalness: 0.1 });
+
+  function rebuild() {
+    scene.remove(root); root.traverse(o => { if (o.geometry) o.geometry.dispose(); }); root = new THREE.Group(); scene.add(root);
+    scene.background = new THREE.Color(css("--paper") || "#f5f3f1");
+    const g0 = new THREE.Group(), g1 = new THREE.Group(); root.add(g0, g1); mezzGroup = g1;
+    // ground plane for context
+    const ground = new THREE.Mesh(new THREE.PlaneGeometry(80, 80), new THREE.MeshStandardMaterial({ color: css("--bg") || "#e9e6ea", roughness: 1 })); ground.rotation.x = -Math.PI / 2; ground.position.set(8, -0.02, 6); ground.receiveShadow = true; g0.add(ground);
+    g0.add(flat(BASE.patio, 0.53, mat(COL.patio, { roughness: 0.95 })));
+    BASE.rooms.filter(r => r.f === 0 && r.poly.length).forEach(r => g0.add(flat(r.poly, 0.001, floorMat)));
+    S.levels.filter(l => l.f === 0 && l.st !== "demo").forEach(l => g0.add(extr(l.poly, 0, l.z, [floorMat, mat(COL.level, { roughness: 0.8 })])));
+    // walls
+    const w0 = S.walls.filter(w => w.f === 0 && w.st !== "demo"); w0.forEach(w => wallMeshes(w, g0, 0, w0));
+    const w1 = S.walls.filter(w => w.f === 1 && w.st !== "demo"); w1.forEach(w => wallMeshes(w, g1, 2.65, w1));
+    // mezzanine slab + rail
+    const slab = extr(BASE.slab, 2.45, 0.2, [floorMat2, mat(COL.slabSide, { roughness: 0.8 })]); g1.add(slab);
+    const under = flat(BASE.slab, 2.449, new THREE.MeshStandardMaterial({ color: "#3e3a4a", roughness: 0.95, side: THREE.BackSide })); g1.add(under);
+    const shaft = extr(BASE.shaft, 2.651, 0.02, [mat("#1f1b22"), mat("#1f1b22")]); g1.add(shaft);
+    const edge = BASE.mezzEdge; const railM = mat(COL.ink, { metalness: 0.5, roughness: 0.4 });
+    let nb = 0; const segs = []; for (let i = 1; i < edge.length; i++) { const a = edge[i - 1], b = edge[i]; const Ld = dist(a, b); segs.push([a, b, Ld]); nb += Math.max(1, Math.round(Ld / 0.13)); }
+    const bal = new THREE.InstancedMesh(new THREE.BoxGeometry(0.02, 0.98, 0.02), railM, nb); const M = new THREE.Matrix4(); let bi = 0;
+    segs.forEach(([a, b, Ld]) => { const n = Math.max(1, Math.round(Ld / 0.13)); for (let i = 0; i < n; i++) { const t = (i + 0.5) / n; M.makeTranslation(a[0] + (b[0] - a[0]) * t, 2.65 + 0.49, a[1] + (b[1] - a[1]) * t); bal.setMatrixAt(bi++, M); } const top = new THREE.Mesh(new THREE.BoxGeometry(Ld + 0.02, 0.05, 0.06), railM); top.position.set((a[0] + b[0]) / 2, 2.65 + 1.0, (a[1] + b[1]) / 2); top.rotation.y = -Math.atan2(b[1] - a[1], b[0] - a[0]); g1.add(top); });
+    bal.castShadow = true; g1.add(bal);
+    // ceilings (visible from below only)
+    const ceilM = new THREE.MeshStandardMaterial({ color: "#4b4759", roughness: 0.95, side: THREE.FrontSide });
+    const hull = [[0.3, 0.2], [13.5, 0.2], [13.5, 11.3], [0.3, 11.3]];
+    const hs = new THREE.Shape(); hull.forEach((p, i) => i ? hs.lineTo(p[0], p[1]) : hs.moveTo(p[0], p[1])); const cg = new THREE.ShapeGeometry(hs); cg.rotateX(Math.PI / 2); const ceil = new THREE.Mesh(cg, ceilM); ceil.position.y = 4.95; g1.add(ceil);
+    // items
+    const showEx = opts.existing;
+    S.items.forEach(it => {
+      if (it.st === "demo" || it.kind === "dim") return; if (!showEx && it.st === "ex" && isFurniture(it) && !it.fixed) return;
+      const m = itemMesh(it); if (!m) return; const c = CAT[it.kind];
+      const baseY = (it.f === 1 ? 2.65 : 0) + ((c.stair || it.kind === "rail") ? (it.z0 || 0) : itemBaseZ(it) + (c.z0 ? (it.z0 != null ? it.z0 : c.z0) : 0));
+      m.position.set(it.x, baseY, it.y); m.rotation.y = -(it.rot || 0) * Math.PI / 180;
+      (it.f === 1 ? g1 : g0).add(m);
+    });
+    g1.visible = mezzVisible;
+    render3();
+  }
+  let need = true; function render3() { need = true; }
+  function loop() { requestAnimationFrame(loop); if (!box.isConnected || box.hidden) return; const moved = controls.update(); if (need || moved) { renderer.render(scene, camera); need = false; } }
+  controls.addEventListener("change", render3);
+  function resize() { const r = box.getBoundingClientRect(); if (!r.width) return; renderer.setSize(r.width, r.height, false); camera.aspect = r.width / r.height; camera.updateProjectionMatrix(); render3(); }
+  new ResizeObserver(resize).observe(box); resize();
+  const CAMS = {
+    over: [[7.4, 15.5, 19.0], [7.8, 0, 6.0], 45],
+    inn: [[12.95, 2.15, 9.3], [5.4, 1.1, 5.2], 62],
+    bar: [[11.6, 2.3, 1.6], [5.8, 0.9, 6.6], 62],
+    mes: [[1.0, 4.3, 9.9], [10.2, 1.2, 4.4], 62],
+  };
+  function cam(k) { const [p, t, fov] = CAMS[k] || CAMS.over; camera.fov = fov || 50; camera.updateProjectionMatrix(); camera.position.set(...p); controls.target.set(...t); controls.update(); if (k === "mes" && !mezzVisible) setMezz(true); render3(); $$("#bar3d [data-cam]").forEach(b => b.setAttribute("aria-pressed", b.dataset.cam === k)); }
+  function setMezz(on) { mezzVisible = on; if (mezzGroup) mezzGroup.visible = on; const b = $("#tgMezz3d"); if (b) { b.setAttribute("aria-pressed", on); b.textContent = on ? "Mesanin synlig" : "Mesanin skjult"; } render3(); }
+  function shot() { renderer.render(scene, camera); return new Promise(r => renderer.domElement.toBlob(r, "image/png")); }
+  loop();
+  return { rebuild, resize, cam, setMezz, shot };
+}
+
+</script>
+</body>
+</html>
